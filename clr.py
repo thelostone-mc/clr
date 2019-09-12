@@ -105,7 +105,6 @@ def calculate_clr(threshold, grant_contributions):
 
             lr_contribution = 0
             sqrt_of_product_pair = grant["sqrt_of_product_pairs"][index]
-            # print(f'THRESHOLD {threshold} | PAIR {profile_pair} | SQRT {sqrt_of_product_pair} ')
 
             if threshold >= sqrt_of_product_pair:
                 lr_contribution = sqrt_of_product_pair
