@@ -139,13 +139,16 @@ def grants_clr_calculate (total_pot, grant_contributions, min_threshold, max_thr
         min_threshold = threshold
         print(f'\n-- NEW MIN {min_threshold} MAX {max_threshold}\n************\n\n')
     else:
-        return threshold
+        return threshold, total_clr, iterations
 
-    grants_clr_calculate(total_pot, grant_contributions, min_threshold, max_threshold, iterations)
+    return grants_clr_calculate(total_pot, grant_contributions, min_threshold, max_threshold, iterations)
 
 total_pot = 50
 max_threshold = total_pot
 min_threshold= 0
-grants_clr_calculate(total_pot, grant_contributions, min_threshold, max_threshold)
+
+threshold, total_clr, iterations = grants_clr_calculate(total_pot, grant_contributions, min_threshold, max_threshold)
+
+print(f'\n\n\n=============== \nFINAL \nPOT:  {total_pot} | Calculated CLR:  {total_clr} | Threshold {threshold} | Iterations {iterations}\n===============')
 
 # calculate_clr(10, grant_contributions)
