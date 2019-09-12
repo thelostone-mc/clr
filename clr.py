@@ -24,8 +24,29 @@ grant_contributions = [
     }
 ]
 
+'''
+    Helper function that generates all combinations of pair of grant
+    contributions and the corresponding sqrt of the product pair
 
-def calculate_grant_lr(threshold, grant):
+    Args:
+        {
+            'id': (string) ,
+            'contibutions' : [
+                {
+                    contributor_profile (str) : contribution_amount (int)
+                }
+            ]
+        }
+
+    Returns:
+        {
+            'id': (str),
+            'profile_pairs': [tuples],
+            'contribution_pairs': [tuples],
+            'sqrt_of_product_pairs':  array
+        }
+'''
+def generate_grant_pair(grant):
     grant_id = grant.get('id')
     grant_contributions = grant.get('contributions')
     unique_contributions = {}
@@ -66,6 +87,33 @@ def calculate_grant_lr(threshold, grant):
 
     return grant
 
+
+'''
+    Given a threshold and grant conributions, it calculates the
+    total clr and how that would be split amongst the grants
+
+    Args:
+        threshold: (int),
+        grant: {
+            'id': (string),
+            'contibutions' : [
+                {
+                    contributor_profile (str) : contribution_amount (int)
+                }
+            ]
+        }
+
+    Returns:
+        {
+            'total_clr': (int),
+            '_clrs': [
+                {
+                    'id': (str),
+                    'clr_amount': (int)
+                }
+            ]
+        }
+'''
 def calculate_clr(threshold, grant_contributions):
     grants = []
     group_by_pair = {}
@@ -73,7 +121,7 @@ def calculate_clr(threshold, grant_contributions):
     total_clr = 0
 
     for grant_contribution in grant_contributions:
-        grant = calculate_grant_lr(threshold, grant_contribution)
+        grant = generate_grant_pair(grant_contribution)
 
         grants.append(grant)
 
@@ -128,6 +176,24 @@ def calculate_clr(threshold, grant_contributions):
     return total_clr, _clrs
 
 
+'''
+    Given the total pot and grants and it's contirbutions,
+    it uses binary search to find out the threshold so
+    that the entire pot can be distributed based on it's contributions
+
+    Args:
+        total_pot:      (int),
+        grant_contributions: object,
+        min_threshold:  (int)
+        max_threshold:  (int)
+        iterations:     (int)
+
+    Returns:
+        grants_clr (object)
+        total_clr  (int)
+        threshold  (int)
+        iterations (int)
+'''
 def grants_clr_calculate (total_pot, grant_contributions, min_threshold, max_threshold, iterations = 0):
     iterations += 1
     threshold = (max_threshold + min_threshold) / 2
