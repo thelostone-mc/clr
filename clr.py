@@ -90,6 +90,8 @@ def calculate_clr(threshold, grant_contributions):
 
     print(f'SUM OF GROUPED BY PAIRS {group_by_pair} \n=================\n')
 
+    _clrs = []
+
     for grant in grants:
         grant_clr = 0
         lr_contributions = []
@@ -117,16 +119,19 @@ def calculate_clr(threshold, grant_contributions):
             print(f'LR CONTRIBUTION {lr_contribution} | PAIR {profile_pair}')
 
         print(f'\n+++++\nGRANT {grant["id"]} - CLR CONTRIBUTION {grant_clr} \n+++++')
-
+        _clrs.append({
+            'id': grant["id"],
+            'clr_amount': grant_clr
+        })
     print(f'\n\n============ \nTOTAL CLR {total_clr} \n=============')
 
-    return total_clr
+    return total_clr, _clrs
 
 
 def grants_clr_calculate (total_pot, grant_contributions, min_threshold, max_threshold, iterations = 0):
     iterations += 1
     threshold = (max_threshold + min_threshold) / 2
-    total_clr = calculate_clr(threshold, grant_contributions)
+    total_clr, grants_clrs = calculate_clr(threshold, grant_contributions)
 
     print(f'\n\n\n************ \nPOT:  {total_pot} | Calculated CLR:  {total_clr} | Threshold {threshold} | Iterations {iterations}')
     print(f'\nMIN {min_threshold} MAX {max_threshold} threshold {threshold}')
@@ -138,7 +143,7 @@ def grants_clr_calculate (total_pot, grant_contributions, min_threshold, max_thr
         min_threshold = threshold
         print(f'\n-- NEW MIN {min_threshold} MAX {max_threshold}\n************\n\n')
     else:
-        return threshold, total_clr, iterations
+        return grants_clrs, total_clr, threshold, iterations
 
     return grants_clr_calculate(total_pot, grant_contributions, min_threshold, max_threshold, iterations)
 
@@ -146,8 +151,10 @@ total_pot = 50
 max_threshold = total_pot
 min_threshold= 0
 
-threshold, total_clr, iterations = grants_clr_calculate(total_pot, grant_contributions, min_threshold, max_threshold)
+grants_clr, total_clr, threshold, iterations = grants_clr_calculate(total_pot, grant_contributions, min_threshold, max_threshold)
+print(f'\n\n\n=============== \nFINAL \nPOT:  {total_pot} \nCalculated CLR:  {total_clr} \nThreshold {threshold} \nIterations {iterations} \nCLR Breakup\n')
+print(json.dumps(grants_clr, indent=2))
+print('===============')
 
-print(f'\n\n\n=============== \nFINAL \nPOT:  {total_pot} | Calculated CLR:  {total_clr} | Threshold {threshold} | Iterations {iterations}\n===============')
-
-# calculate_clr(10, grant_contributions)
+# threshold = 10
+# calculate_clr(threshold, grant_contributions)
