@@ -7,9 +7,7 @@ grant_contributions = [
     {
         'id': '1',
         'contributions': [
-            { '1': 5 },
-            { '2': 10 },
-            { '3': 25 }
+            { '1': 5 }
         ]
     },
     {
@@ -25,7 +23,8 @@ grant_contributions = [
     {
         'id': '3',
         'contributions': [
-            { '1': 5 }
+            { '3': 20 },
+            { '1': 2 }
         ]
     }
 ]
