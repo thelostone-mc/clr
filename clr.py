@@ -21,6 +21,12 @@ grant_contributions = [
             { '5': 5 },
             { '1': 15 }
         ]
+    },
+    {
+        'id': '3',
+        'contributions': [
+            { '1': 5 }
+        ]
     }
 ]
 
@@ -58,6 +64,10 @@ def generate_grant_pair(grant):
                 unique_contributions[profile] = donation
             else:
                 unique_contributions[profile] = amount
+
+    if len(unique_contributions) == 1:
+        profile = next(iter(unique_contributions))
+        unique_contributions['_' + profile] = unique_contributions[profile]
 
     print(f'Grant Contributions: {grant_contributions}')
     print(f'Unique Contributions: {unique_contributions}')
@@ -194,13 +204,17 @@ def calculate_clr(threshold, grant_contributions):
         threshold  (int)
         iterations (int)
 '''
-def grants_clr_calculate (total_pot, grant_contributions, min_threshold, max_threshold, iterations = 0):
+def grants_clr_calculate (total_pot, grant_contributions, min_threshold, max_threshold, iterations = 0, previous_threshold=None):
     iterations += 1
     threshold = (max_threshold + min_threshold) / 2
     total_clr, grants_clrs = calculate_clr(threshold, grant_contributions)
 
     print(f'\n\n\n************ \nPOT:  {total_pot} | Calculated CLR:  {total_clr} | Threshold {threshold} | Iterations {iterations}')
     print(f'\nMIN {min_threshold} MAX {max_threshold} threshold {threshold}')
+
+    # ADDED TO LIMIT
+    if iterations == 100 or total_pot == threshold or previous_threshold == threshold:
+        return grants_clrs, total_clr, threshold, iterations
 
     if total_clr > total_pot:
         max_threshold = threshold
@@ -211,7 +225,7 @@ def grants_clr_calculate (total_pot, grant_contributions, min_threshold, max_thr
     else:
         return grants_clrs, total_clr, threshold, iterations
 
-    return grants_clr_calculate(total_pot, grant_contributions, min_threshold, max_threshold, iterations)
+    return grants_clr_calculate(total_pot, grant_contributions, min_threshold, max_threshold, iterations, threshold)
 
 total_pot = 50
 max_threshold = total_pot
