@@ -67,7 +67,7 @@ def generate_grant_pair(grant):
 
     if len(unique_contributions) == 1:
         profile = next(iter(unique_contributions))
-        unique_contributions['_' + profile] = unique_contributions[profile]
+        unique_contributions['_' + profile] = 1
 
     print(f'Grant Contributions: {grant_contributions}')
     print(f'Unique Contributions: {unique_contributions}')
