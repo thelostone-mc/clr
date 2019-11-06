@@ -7,24 +7,24 @@ grant_contributions = [
     {
         'id': '1',
         'contributions': [
-            { '1': 5 }
+            { '1': 5.0 }
         ]
     },
     {
         'id': '2',
         'contributions': [
-            { '3': 20 },
-            { '1': 2 },
-            { '4': 2 },
-            { '5': 5 },
-            { '1': 15 }
+            { '3': 20.0 },
+            { '1': 2.0 },
+            { '4': 2.0 },
+            { '5': 5.0 },
+            { '1': 15.0 }
         ]
     },
     {
         'id': '3',
         'contributions': [
-            { '3': 20 },
-            { '1': 2 }
+            { '3': 20.0 },
+            { '1': 2.0 }
         ]
     }
 ]
@@ -59,14 +59,16 @@ def generate_grant_pair(grant):
     for contribution in grant_contributions:
         for profile, amount in contribution.items():
             if unique_contributions.get(profile):
+                # aggregates contributions - why not condense to one line?
                 donation = unique_contributions[profile] + amount
                 unique_contributions[profile] = donation
             else:
                 unique_contributions[profile] = amount
 
-    if len(unique_contributions) == 1:
-        profile = next(iter(unique_contributions))
-        unique_contributions['_' + profile] = 1
+    # # remove single pair contribution duplication
+    # if len(unique_contributions) == 1:
+    #     profile = next(iter(unique_contributions))
+    #     unique_contributions['_' + profile] = 1
 
     print(f'Grant Contributions: {grant_contributions}')
     print(f'Unique Contributions: {unique_contributions}')
@@ -76,7 +78,7 @@ def generate_grant_pair(grant):
 
     sqrt_of_product_pairs = []
     for contribution_1, contribution_2 in contribution_pairs:
-        sqrt_of_product = round(math.sqrt(contribution_1 * contribution_2))
+        sqrt_of_product = math.sqrt(contribution_1 * contribution_2)  # remove rounding
         sqrt_of_product_pairs.append(sqrt_of_product)
 
 
@@ -165,10 +167,11 @@ def calculate_clr(threshold, grant_contributions):
             lr_contribution = 0
             sqrt_of_product_pair = grant["sqrt_of_product_pairs"][index]
 
-            if threshold >= sqrt_of_product_pair:
-                lr_contribution = sqrt_of_product_pair
-            else:
-                lr_contribution = threshold * (sqrt_of_product_pair / group_by_pair.get(_pair))
+            # pairwise matching formula
+            lr_contribution = sqrt_of_product_pair * min(1, threshold / group_by_pair.get(_pair))
+            
+            # # vitalik's division formula
+            # lr_contribution = sqrt_of_product_pair / (group_by_pair.get(_pair) / threshold + 1)
 
             lr_contributions.append(lr_contribution)
             grant_clr += lr_contribution
