@@ -24,26 +24,6 @@ for proj, contribz in contrib_dict.items():
                 tot_overlap[k1][k2] = 0
             tot_overlap[k1][k2] += (v1 * v2) ** 0.5
 
-# # singular instance
-# threshold = 15.46267066735667
-# bigtot = 0
-# totals = []
-# # single donation doesn't get a match
-# for proj, contribz in contrib_dict.items():
-#     tot = 0
-#     for k1, v1 in contribz.items():
-#         for k2, v2 in contribz.items():
-#             if k2 > k1:  # remove pairs
-#                 # pairwise matching formula
-#                 tot += (v1 * v2) ** 0.5 * min(1, threshold / tot_overlap[k1][k2])
-#                 # # vitalik's division formula
-#                 # tot += (v1 * v2) ** 0.5 / (tot_overlap[k1][k2] / max_contrib + 1)
-#     bigtot += tot
-#     totals.append((proj, tot))
-# for proj, tot in sorted(totals):
-#     print('{}, {}'.format(proj, tot))
-# print(bigtot)
-
 # add threshold "binary" calculation here
 total_pot = 50.0
 upper = total_pot
@@ -78,4 +58,45 @@ while iterations < 100:
         lower = threshold
     elif bigtot > total_pot:
         upper = threshold
+
+# # singular instance
+# threshold = 15.46267066735667
+# bigtot = 0
+# totals = []
+# # single donation doesn't get a match
+# for proj, contribz in contrib_dict.items():
+#     tot = 0
+#     for k1, v1 in contribz.items():
+#         for k2, v2 in contribz.items():
+#             if k2 > k1:  # remove pairs
+#                 # pairwise matching formula
+#                 tot += (v1 * v2) ** 0.5 * min(1, threshold / tot_overlap[k1][k2])
+#                 # # vitalik's division formula
+#                 # tot += (v1 * v2) ** 0.5 / (tot_overlap[k1][k2] / max_contrib + 1)
+#     bigtot += tot
+#     totals.append((proj, tot))
+# for proj, tot in sorted(totals):
+#     print('{}, {}'.format(proj, tot))
+# print(bigtot)
+
+# # marginal leverage curve
+# threshold = 15.46267066735667
+# bigtot = 0
+# totals = []
+# for proj, contribz in contrib_dict.items():
+#     tot = 0
+#     for i in range(5, 20, 5):
+#         for k1, v1 in contribz.items():
+#             tot_overlap_temp = dict({**tot_overlap[k1], **{99999999.0: i}})
+#             for k2, v2 in {**contribz, **{99999999.0: i}}.items():
+#                 if k2 > k1:  # remove pairs
+#                     tot += (v1 * v2) ** 0.5 * min(1, threshold / tot_overlap_temp[k1][k2])
+#                     # # vitalik's division formula
+#                     # tot += (v1 * v2) ** 0.5 / (tot_overlap[k1][k2] / max_contrib + 1)
+#         bigtot += tot
+#         totals.append((proj, tot))
+# for proj, tot in sorted(totals):
+#     print('{}, {}'.format(proj, tot))
+# print(bigtot)
+
 
