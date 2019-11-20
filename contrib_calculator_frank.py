@@ -66,7 +66,7 @@ while iterations < 100:
                     # pairwise matching formula
                     tot += (v1 * v2) ** 0.5 * min(1, threshold / tot_overlap[k1][k2])
                     # # vitalik's division formula
-                    # tot += (v1 * v2) ** 0.5 / (tot_overlap[k1][k2] / max_contrib + 1)
+                    # tot += ((v1 * v2) ** 0.5) / (tot_overlap[k1][k2] / max_contrib + 1)
         bigtot += tot
         totals.append((proj, tot))
     print(f'threshold {threshold} yields bigtot {bigtot} vs totalpot {total_pot} at iteration {iterations}')
