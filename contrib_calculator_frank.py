@@ -24,43 +24,8 @@ for proj, contribz in contrib_dict.items():
                 tot_overlap[k1][k2] = 0
             tot_overlap[k1][k2] += (v1 * v2) ** 0.5
 
-# add threshold "binary" calculation here
-lower = 0
-upper = total_pot * 2
-iterations = 0
-threshold = lower + upper // 2
-while iterations < 100:
-    iterations += 1
-    bigtot = 0
-    totals = []
-    # single donation doesn't get a match
-    for proj, contribz in contrib_dict.items():
-        tot = 0
-        for k1, v1 in contribz.items():
-            for k2, v2 in contribz.items():
-                if k2 > k1:  # remove pairs
-                    # pairwise matching formula
-                    tot += (v1 * v2) ** 0.5 * min(1, threshold / tot_overlap[k1][k2])
-                    # # vitalik's division formula
-                    # tot += (v1 * v2) ** 0.5 / (tot_overlap[k1][k2] / max_contrib + 1)
-        bigtot += tot
-        totals.append((proj, tot))
-    print('threshold', threshold)
-    if bigtot == total_pot:
-        print(bigtot)
-    elif bigtot < total_pot:
-        threshold = (threshold + upper) / 2
-        print('total less than pot', bigtot)
-    elif bigtot > total_pot:
-        threshold = (lower + threshold) / 2
-        print('total greater than pot', bigtot)
-    elif iterations == 101:
-        print(bigtot)
-
-# # max_contrib = 3.4514245
+# # singular instance
 # threshold = 15.46267066735667
-# # max_contrib = 999999
-
 # bigtot = 0
 # totals = []
 # # single donation doesn't get a match
@@ -75,9 +40,42 @@ while iterations < 100:
 #                 # tot += (v1 * v2) ** 0.5 / (tot_overlap[k1][k2] / max_contrib + 1)
 #     bigtot += tot
 #     totals.append((proj, tot))
-
 # for proj, tot in sorted(totals):
 #     print('{}, {}'.format(proj, tot))
-
 # print(bigtot)
-#     
+
+# add threshold "binary" calculation here
+total_pot = 50.0
+upper = total_pot
+lower = 0.0
+iterations = 0
+while iterations < 100:
+    threshold = (lower + upper) / 2
+    iterations += 1
+    if iterations == 100:
+        print(f'iterations reached, bigtot at {bigtot}')
+        break
+    bigtot = 0
+    totals = []
+    # single donation doesn't get a match
+    for proj, contribz in contrib_dict.items():
+        tot = 0
+        for k1, v1 in contribz.items():
+            for k2, v2 in contribz.items():
+                if k2 > k1:  # remove pairs
+                    # pairwise matching formula
+                    tot += (v1 * v2) ** 0.5 * min(1, threshold / tot_overlap[k1][k2])
+                    # # vitalik's division formula
+                    # tot += (v1 * v2) ** 0.5 / (tot_overlap[k1][k2] / max_contrib + 1)
+        bigtot += tot
+        totals.append((proj, tot))
+    print(f'threshold {threshold} yields bigtot {bigtot} vs totalpot {total_pot} at iteration {iterations}')
+    if bigtot == total_pot:
+        print(f'bigtot {bigtot} = total_pot {total_pot} with threshold {threshold}')
+        print(totals)
+        break
+    elif bigtot < total_pot:
+        lower = threshold
+    elif bigtot > total_pot:
+        upper = threshold
+
