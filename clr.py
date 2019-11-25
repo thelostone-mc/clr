@@ -1,33 +1,43 @@
 from itertools import combinations
 import math
-
 import json
+import time
 
-grant_contributions = [
-    {
-        'id': '1',
-        'contributions': [
-            { '1': 5.0 }
-        ]
-    },
-    {
-        'id': '2',
-        'contributions': [
-            { '3': 20.0 },
-            { '1': 2.0 },
-            { '4': 2.0 },
-            { '5': 5.0 },
-            { '1': 15.0 }
-        ]
-    },
-    {
-        'id': '3',
-        'contributions': [
-            { '3': 20.0 },
-            { '1': 2.0 }
-        ]
-    }
-]
+df = json.loads(open('v_contribs.json').read())
+dd = [{'id': proj, 'contributions': [{str(user): amount}]} for proj, user, amount in df]
+temp = {}
+for _dict in dd:
+    if _dict['id'] not in temp:
+        temp[_dict['id']] = []
+    temp_d = temp[_dict['id']]
+    temp_d = temp_d.extend(_dict.get('contributions', 0))
+grant_contributions = [{'id': k, 'contributions': v} for k, v in temp.items()]
+
+# grant_contributions = [
+#     {
+#         'id': '1',
+#         'contributions': [
+#             { '1': 5.0 }
+#         ]
+#     },
+#     {
+#         'id': '2',
+#         'contributions': [
+#             { '3': 20.0 },
+#             { '1': 2.0 },
+#             { '4': 2.0 },
+#             { '5': 5.0 },
+#             { '1': 15.0 }
+#         ]
+#     },
+#     {
+#         'id': '3',
+#         'contributions': [
+#             { '3': 20.0 },
+#             { '1': 2.0 }
+#         ]
+#     }
+# ]
 
 '''
     Helper function that generates all combinations of pair of grant
@@ -70,8 +80,8 @@ def generate_grant_pair(grant):
     #     profile = next(iter(unique_contributions))
     #     unique_contributions['_' + profile] = 1
 
-    print(f'Grant Contributions: {grant_contributions}')
-    print(f'Unique Contributions: {unique_contributions}')
+    # print(f'Grant Contributions: {grant_contributions}')
+    # print(f'Unique Contributions: {unique_contributions}')
 
     profile_pairs = list(combinations(unique_contributions.keys(), 2))
     contribution_pairs = list(combinations(unique_contributions.values(), 2))
@@ -89,12 +99,12 @@ def generate_grant_pair(grant):
         'sqrt_of_product_pairs': sqrt_of_product_pairs
     }
 
-    print(f'Grant ID: {grant["id"]}')
-    print(f'Profile Pairs: {grant["profile_pairs"]}')
-    print(f'Contribution Pairs: {grant["contribution_pairs"]}')
-    print(f'Sqrt Of Product Pairs: {grant["sqrt_of_product_pairs"]}')
+    # print(f'Grant ID: {grant["id"]}')
+    # print(f'Profile Pairs: {grant["profile_pairs"]}')
+    # print(f'Contribution Pairs: {grant["contribution_pairs"]}')
+    # print(f'Sqrt Of Product Pairs: {grant["sqrt_of_product_pairs"]}')
 
-    print('=================\n')
+    # print('=================\n')
 
     return grant
 
@@ -147,14 +157,14 @@ def calculate_clr(threshold, grant_contributions):
             else:
                 group_by_pair[pair] = grant['sqrt_of_product_pairs'][index]
 
-    print(f'SUM OF GROUPED BY PAIRS {group_by_pair} \n=================\n')
+    # print(f'SUM OF GROUPED BY PAIRS {group_by_pair} \n=================\n')
 
     _clrs = []
 
     for grant in grants:
         grant_clr = 0
         lr_contributions = []
-        print(grant['profile_pairs'])
+        # print(grant['profile_pairs'])
         for index, profile_pair in enumerate(grant['profile_pairs']):
             pair = str('&'.join(profile_pair))
             pair_reversed = str('&'.join(profile_pair[::-1]))
@@ -176,14 +186,14 @@ def calculate_clr(threshold, grant_contributions):
             lr_contributions.append(lr_contribution)
             grant_clr += lr_contribution
             total_clr += lr_contribution
-            print(f'LR CONTRIBUTION {lr_contribution} | PAIR {profile_pair}')
+            # print(f'LR CONTRIBUTION {lr_contribution} | PAIR {profile_pair}')
 
-        print(f'\n+++++\nGRANT {grant["id"]} - CLR CONTRIBUTION {grant_clr} \n+++++')
+        # print(f'\n+++++\nGRANT {grant["id"]} - CLR CONTRIBUTION {grant_clr} \n+++++')
         _clrs.append({
             'id': grant["id"],
             'clr_amount': grant_clr
         })
-    print(f'\n\n============ \nTOTAL CLR {total_clr} \n=============')
+    # print(f'\n\n============ \nTOTAL CLR {total_clr} \n=============')
 
     return total_clr, _clrs
 
@@ -211,8 +221,8 @@ def grants_clr_calculate (total_pot, grant_contributions, min_threshold, max_thr
     threshold = (max_threshold + min_threshold) / 2
     total_clr, grants_clrs = calculate_clr(threshold, grant_contributions)
 
-    print(f'\n\n\n************ \nPOT:  {total_pot} | Calculated CLR:  {total_clr} | Threshold {threshold} | Iterations {iterations}')
-    print(f'\nMIN {min_threshold} MAX {max_threshold} threshold {threshold}')
+    # print(f'\n\n\n************ \nPOT:  {total_pot} | Calculated CLR:  {total_clr} | Threshold {threshold} | Iterations {iterations}')
+    # print(f'\nMIN {min_threshold} MAX {max_threshold} threshold {threshold}')
 
     # ADDED TO LIMIT
     if iterations == 100 or total_pot == threshold or previous_threshold == threshold:
@@ -220,20 +230,25 @@ def grants_clr_calculate (total_pot, grant_contributions, min_threshold, max_thr
 
     if total_clr > total_pot:
         max_threshold = threshold
-        print(f'\n++ MIN {min_threshold} NEW MAX {max_threshold}\n************\n\n')
+        # print(f'\n++ MIN {min_threshold} NEW MAX {max_threshold}\n************\n\n')
     elif total_clr < total_pot:
         min_threshold = threshold
-        print(f'\n-- NEW MIN {min_threshold} MAX {max_threshold}\n************\n\n')
+        # print(f'\n-- NEW MIN {min_threshold} MAX {max_threshold}\n************\n\n')
     else:
         return grants_clrs, total_clr, threshold, iterations
 
     return grants_clr_calculate(total_pot, grant_contributions, min_threshold, max_threshold, iterations, threshold)
 
-total_pot = 50
+start_time = time.time()
+
+total_pot = 100000
 max_threshold = total_pot
 min_threshold= 0
 
 grants_clr, total_clr, threshold, iterations = grants_clr_calculate(total_pot, grant_contributions, min_threshold, max_threshold)
+
+print("--- %s seconds ---" % (time.time() - start_time))
+
 print(f'\n\n\n=============== \nFINAL \nPOT:  {total_pot} \nCalculated CLR:  {total_clr} \nThreshold {threshold} \nIterations {iterations} \nCLR Breakup\n')
 print(json.dumps(grants_clr, indent=2))
 print('===============')

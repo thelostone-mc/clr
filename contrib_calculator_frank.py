@@ -1,11 +1,10 @@
 import json
+import time
 
-# add grant dictionary conversion here if we want to use this script
+start_time = time.time()
 
-# contribs = json.loads(open('v_contribs.json').read())
-# contribs = json.loads(open('v_contribs_short.json').read())
-
-contribs = [[1.0, 1.0, 5.0], [2.0, 3.0, 20.0], [2.0, 1.0, 2.0 ], [2.0, 4.0, 2.0 ], [2.0, 5.0, 5.0 ], [2.0, 1.0, 15.0 ], [3.0, 3.0, 20.0], [3.0, 1.0, 2.0]]
+contribs = json.loads(open('v_contribs.json').read())
+# contribs = [[1.0, 1.0, 5.0], [2.0, 3.0, 20.0], [2.0, 1.0, 2.0 ], [2.0, 4.0, 2.0 ], [2.0, 5.0, 5.0 ], [2.0, 1.0, 15.0 ], [3.0, 3.0, 20.0], [3.0, 1.0, 2.0]]
 
 # aggregating contributor contributions
 contrib_dict = {}
@@ -25,7 +24,7 @@ for proj, contribz in contrib_dict.items():
             tot_overlap[k1][k2] += (v1 * v2) ** 0.5
 
 # add threshold "binary" calculation here
-total_pot = 50.0
+total_pot = 100000.00
 upper = total_pot
 lower = 0.0
 iterations = 0
@@ -33,6 +32,7 @@ while iterations < 100:
     threshold = (lower + upper) / 2
     iterations += 1
     if iterations == 100:
+        print("--- %s seconds ---" % (time.time() - start_time))
         print(f'iterations reached, bigtot at {bigtot}')
         break
     bigtot = 0
@@ -49,8 +49,9 @@ while iterations < 100:
                     # tot += ((v1 * v2) ** 0.5) / (tot_overlap[k1][k2] / max_contrib + 1)
         bigtot += tot
         totals.append((proj, tot))
-    print(f'threshold {threshold} yields bigtot {bigtot} vs totalpot {total_pot} at iteration {iterations}')
+    # print(f'threshold {threshold} yields bigtot {bigtot} vs totalpot {total_pot} at iteration {iterations}')
     if bigtot == total_pot:
+        print("--- %s seconds ---" % (time.time() - start_time))
         print(f'bigtot {bigtot} = total_pot {total_pot} with threshold {threshold}')
         print(totals)
         break
