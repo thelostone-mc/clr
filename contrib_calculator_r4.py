@@ -9,8 +9,8 @@ import pandas as pd
 '''
 def get_data():
     # read data
-    grants = pd.read_csv('r4_grants_raw_data.csv')
-    phantom = pd.read_csv('r4_phantom_raw_data.csv')
+    grants = pd.read_csv('r4_grants_raw_data_new.csv')
+    phantom = pd.read_csv('r4_phantom_raw_data_new.csv')
     
     # concat grant and phantom data
     df = pd.concat([grants, phantom], axis=0)
