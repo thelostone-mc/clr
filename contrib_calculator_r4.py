@@ -184,7 +184,6 @@ def calculate_new_clr(aggregated_contributions, pair_totals, threshold=25.0, tot
         result['clr_amount'] = result['clr_amount'] / normalization_factor
     # # check total = pot
     # print(f'total pot check = {sum([x["clr_amount"] for x in totals])}')
-    
     return totals 
 
 
@@ -297,6 +296,7 @@ def run_live_calc(grant_id=86.0, live_user=99999999.0):
         res = calculate_new_clr(x, y)
         pred = list(filter(lambda x: x['id'] == grant_id, res))[0]['clr_amount']
         clr_curve.append(pred)
+    clr_curve = [clr_curve[0]] + [x - clr_curve[0] for x in clr_curve[1:]]
     print('live calc runtime --- %s seconds ---' % (time.time() - start_time))
     print(clr_curve)
     return clr_curve
