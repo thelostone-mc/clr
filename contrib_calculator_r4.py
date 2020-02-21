@@ -130,7 +130,8 @@ def aggregate_contributions_live(grant_contributions, grant_id=86.0, live_user=9
         contrib_dict[proj][user] = contrib_dict[proj].get(user, 0) + amount
     contrib_dict_list = []
     tot_overlap_list = []
-    for amount in [0, 1, 10, 100, 1000]:
+    # for amount in [0, 1, 10, 100, 1000]:
+    for amount in [0.00001]:
         contrib_dict_copy = copy.deepcopy(contrib_dict)
         contrib_dict_copy[grant_id][live_user] = contrib_dict_copy[grant_id].get(live_user, 0) + amount
         contrib_dict_list.append(contrib_dict_copy)
