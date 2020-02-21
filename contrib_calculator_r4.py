@@ -288,13 +288,13 @@ def run_media_calc():
 
     Returns: live donation incremental clr award amounts 
 '''
-def run_live_calc(grant_id=86.0, live_user=99999999.0):
+def run_live_calc(grant_id=86.0, live_user=99999999.0, threshold=25.0, total_pot=125000.0):
     start_time = time.time()
     tech, media = get_data()
     aggregated_contributions_list, pair_totals_list = aggregate_contributions_live(tech, grant_id=grant_id, live_user=live_user)
     clr_curve = []
     for x, y in zip(aggregated_contributions_list, pair_totals_list):
-        res = calculate_new_clr(x, y)
+        res = calculate_new_clr(x, y, threshold=threshold, total_pot=total_pot)
         pred = list(filter(lambda x: x['id'] == grant_id, res))[0]['clr_amount']
         clr_curve.append(pred)
     clr_curve = [clr_curve[0]] + [x - clr_curve[0] for x in clr_curve[1:]]
