@@ -273,8 +273,7 @@ def calculate_new_clr_combined(aggregated_contributions_pos, pair_totals_pos, ag
         tot = 0
         for k1, v1 in contribz.items():
             for k2, v2 in contribz.items():
-                if k2 > k1:  # remove single donations
-                    # vitalik's division formula
+                if k2 > k1:  # removes single donations, vitalik's formula
                     tot += ((v1 * v2) ** 0.5) / (pair_totals_pos[k1][k2] / threshold + 1)
         bigtot_pos += tot
         totals_pos.append({'id': proj, 'clr_amount': tot})
@@ -286,9 +285,10 @@ def calculate_new_clr_combined(aggregated_contributions_pos, pair_totals_pos, ag
         tot = 0
         for k1, v1 in contribz.items():
             for k2, v2 in contribz.items():
-                if k2 > k1:  # keep singles
-                    # vitalik's division formula
+                if k2 > k1:  # removes single donations but adds it in below, vitalik's formula
                     tot += ((v1 * v2) ** 0.5) / (pair_totals_neg[k1][k2] / threshold + 1)
+                if k2 == k1:  # negative vote will count less if single, but will count
+                    tot += ((v1 * v2) ** 0.5) / (pair_totals_neg[k1][k2] / 1 + 1)
         bigtot_neg += tot
         totals_neg.append({'id': proj, 'clr_amount': tot})
 
@@ -308,7 +308,7 @@ def calculate_new_clr_combined(aggregated_contributions_pos, pair_totals_pos, ag
     for x in totals:
         x['clr_amount'] = x['clr_amount'] / normalization_factor
 
-    return totals
+    return totals_neg, totals
 
 
 
@@ -321,7 +321,7 @@ def calculate_new_clr_combined(aggregated_contributions_pos, pair_totals_pos, ag
 '''
 def run_tech_calc():
     start_time = time.time()
-    # tech, media = get_data()
+    tech, media = get_data()
     aggregated_contributions, pair_totals = aggregate_contributions(tech)
     res = calculate_new_clr(aggregated_contributions, pair_totals)
     print('tech final calc runtime --- %s seconds ---' % (time.time() - start_time))
@@ -370,7 +370,12 @@ def run_live_calc(grant_id=86.0, live_user=99999999.0, threshold=25.0, total_pot
 
 
 if __name__ == '__main__':
-    run_tech_calc()
+    # run_tech_calc()
     # run_media_calc()
     # run_live_calc()
     # run_live_calc(99, 63424)
+
+    # combined calculations
+    grant_contributions = translate_data(GRANT_CONTRIBUTIONS)
+    p, n, tp, tn = aggregate_contributions_combined(grant_contributions)
+    ttnn, t = calculate_new_clr_combined(p, tp, n, tn)
