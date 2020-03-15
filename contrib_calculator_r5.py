@@ -22,6 +22,45 @@ GRANT_CONTRIBUTIONS = [
     }
 ]
 
+POSITIVE_CONTRIBUTIONS = [
+    {
+        'id': '4',
+        'contributions': [
+            { '1': 10.0 },
+            { '2': 5.0 },
+            { '2': 10.0 },
+            { '3': 7.0 },
+            { '5': 5.0 }
+        ]
+    },
+    # {
+    #     'id': '5',
+    #     'contributions': [
+    #         { '1': 7.0 },
+    #         { '2': 10.0 },
+    #         { '3': 3.0 },
+    #         { '3': 7.0 }
+    #     ]
+    # }
+]
+
+NEGATIVE_CONTRIBUTIONS = [
+    {
+        'id': '4',
+        'contributions': [
+            { '4': -10.0 },
+            { '5': -5.0 },
+            { '5': -5.0 }
+        ]
+    },
+    # {
+    #     'id': '5',
+    #     'contributions': [
+    #         { '7': -15.0 }
+    #     ]
+    # }
+]
+
 
 
 '''
@@ -259,6 +298,82 @@ def calculate_new_clr(aggregated_contributions, pair_totals, threshold=25.0, tot
         aggregated_contributions: {grant_id (str): {user_id (str): aggregated_amount (float)}}
         pair_totals: {user_id (str): {user_id (str): pair_total (float)}}
         threshold: pairwise coefficient
+        total_pot: total pot for the tech or media round, default tech,
+        positive: positive or negative contributions
+
+    Returns:
+        totals: total clr award by grant, normalized by the normalization factor
+'''
+def calculate_new_clr_separate(aggregated_contributions, pair_totals, threshold=25.0, total_pot=125000.0, positive=True):
+    bigtot = 0
+    totals = []
+    if positive:  # positive
+        for proj, contribz in aggregated_contributions.items():
+            tot = 0
+            for k1, v1 in contribz.items():
+                for k2, v2 in contribz.items():
+                    if k2 > k1:  # removes single donations, vitalik's formula
+                        tot += ((v1 * v2) ** 0.5) / (pair_totals[k1][k2] / threshold + 1)
+            bigtot += tot
+            totals.append({'id': proj, 'clr_amount': tot})
+    
+    if not positive:  # negative
+        for proj, contribz in aggregated_contributions.items():
+            tot = 0
+            for k1, v1 in contribz.items():
+                for k2, v2 in contribz.items():
+                    if k2 > k1:  # removes single donations but adds it in below, vitalik's formula
+                        tot += ((v1 * v2) ** 0.5) / (pair_totals[k1][k2] / threshold + 1)
+                    if k2 == k1:  # negative vote will count less if single, but will count
+                        tot += ((v1 * v2) ** 0.5) / (pair_totals[k1][k2] / 1 + 1)
+            bigtot += tot
+            totals.append({'id': proj, 'clr_amount': tot})
+
+    return totals
+
+
+
+'''
+    Helper function that calculates the final difference between positive and negative totals and finds the final clr reward amount
+
+    Args:
+        
+        totals_pos: [{'id': proj, 'clr_amount': tot}]
+        totals_neg: [{'id': proj, 'clr_amount': tot}]
+        total_pot: 125000.0 default
+
+    Returns:
+        totals: total clr award by grant pos less neg, normalized by the normalization factor
+'''
+def calculate_new_clr_separate_final(totals_pos, totals_neg, total_pot=125000.0):
+    # calculate final totals
+    totals = [{'id': x['id'], 'clr_amount': (math.sqrt(x['clr_amount']) - math.sqrt(y['clr_amount']))**2} for x in totals_pos for y in totals_neg if x['id'] == y['id']]
+    for x in totals:
+        if x['clr_amount'] < 0:
+            x['clr_amount'] = 0
+    
+    # # find normalization factor
+    # bigtot = 0 
+    # for x in totals:
+    #     bigtot += x['clr_amount']
+    # normalization_factor = bigtot / total_pot
+
+    # # modify totals
+    # for x in totals:
+    #     x['clr_amount'] = x['clr_amount'] / normalization_factor
+
+    return totals
+
+
+
+'''
+    Helper function that runs the pairwise clr formula while "binary" searching for the correct threshold.
+
+    Args:
+    
+        aggregated_contributions: {grant_id (str): {user_id (str): aggregated_amount (float)}}
+        pair_totals: {user_id (str): {user_id (str): pair_total (float)}}
+        threshold: pairwise coefficient
         total_pot: total pot for the tech or media round, default tech
 
     Returns:
@@ -298,17 +413,17 @@ def calculate_new_clr_combined(aggregated_contributions_pos, pair_totals_pos, ag
         if x['clr_amount'] < 0:
             x['clr_amount'] = 0
     
-    # find normalization factor
-    bigtot = 0 
-    for x in totals:
-        bigtot += x['clr_amount']
-    normalization_factor = bigtot / total_pot
+    # # find normalization factor
+    # bigtot = 0 
+    # for x in totals:
+    #     bigtot += x['clr_amount']
+    # normalization_factor = bigtot / total_pot
 
-    # modify totals
-    for x in totals:
-        x['clr_amount'] = x['clr_amount'] / normalization_factor
+    # # modify totals
+    # for x in totals:
+    #     x['clr_amount'] = x['clr_amount'] / normalization_factor
 
-    return totals_neg, totals
+    return totals_pos, totals_neg, totals
 
 
 
@@ -369,13 +484,51 @@ def run_live_calc(grant_id=86.0, live_user=99999999.0, threshold=25.0, total_pot
 
 
 
+''' 
+    Meta function that runs combined positive & negative voting mechanisms, case 1
+
+    Args: none
+
+    Returns: grants clr award amounts
+'''
+def run_combined_clr():
+    start_time = time.time()
+    # combined calculations
+    grant_contributions = translate_data(GRANT_CONTRIBUTIONS)
+    p, n, tp, tn = aggregate_contributions_combined(grant_contributions)
+    totals_pos, totals_neg, t = calculate_new_clr_combined(p, tp, n, tn)
+    print('live calc runtime --- %s seconds ---' % (time.time() - start_time))
+    return t
+
+
+
+''' 
+    Meta function that runs combined positive & negative voting mechanisms, case 2
+
+    Args: none
+
+    Returns: grants clr award amounts
+'''
+def run_separate_clr():
+    start_time = time.time()
+    # positive
+    positive_contributions = translate_data(POSITIVE_CONTRIBUTIONS)
+    p_, tp_ = aggregate_contributions(positive_contributions)
+    totals_pos_ = calculate_new_clr_separate(p_, tp_)
+    # negative
+    negative_contributions = translate_data(NEGATIVE_CONTRIBUTIONS)
+    n_, tn_ = aggregate_contributions(negative_contributions)
+    totals_neg_ = calculate_new_clr_separate(n_, tn_, positive=False)
+    # final
+    t_ = calculate_new_clr_separate_final(totals_pos, totals_neg)
+    print('live calc runtime --- %s seconds ---' % (time.time() - start_time))
+    return t_
+
+
 if __name__ == '__main__':
     # run_tech_calc()
     # run_media_calc()
     # run_live_calc()
     # run_live_calc(99, 63424)
-
-    # combined calculations
-    grant_contributions = translate_data(GRANT_CONTRIBUTIONS)
-    p, n, tp, tn = aggregate_contributions_combined(grant_contributions)
-    ttnn, t = calculate_new_clr_combined(p, tp, n, tn)
+    run_combined_clr()
+    run_separate_clr()       
