@@ -6,59 +6,78 @@ import pandas as pd
 
 
 
-GRANT_CONTRIBUTIONS = [
+# GRANT_CONTRIBUTIONS = [
+#     {
+#         'id': '4',
+#         'contributions': [
+#             { '1': 10.0 },
+#             { '2': 5.0 },
+#             { '2': 10.0 },
+#             { '3': 7.0 },
+#             { '5': 5.0 },
+#             { '4': -10.0 },
+#             { '5': -5.0 },
+#             { '5': -5.0 }
+#         ]
+#     }
+# ]
+
+# POSITIVE_CONTRIBUTIONS = [
+#     {
+#         'id': '4',
+#         'contributions': [
+#             { '1': 10.0 },
+#             { '2': 5.0 },
+#             { '2': 10.0 },
+#             { '3': 7.0 },
+#             { '5': 5.0 }
+#         ]
+#     },
+#     # {
+#     #     'id': '5',
+#     #     'contributions': [
+#     #         { '1': 7.0 },
+#     #         { '2': 10.0 },
+#     #         { '3': 3.0 },
+#     #         { '3': 7.0 }
+#     #     ]
+#     # }
+# ]
+
+POSITIVE_CONTRIBUTIONS_V = [
     {
         'id': '4',
         'contributions': [
-            { '1': 10.0 },
-            { '2': 5.0 },
-            { '2': 10.0 },
-            { '3': 7.0 },
-            { '5': 5.0 },
-            { '4': -10.0 },
-            { '5': -5.0 },
-            { '5': -5.0 }
+            {str(x): 1.0} for x in range(1, 1001)
         ]
     }
 ]
 
-POSITIVE_CONTRIBUTIONS = [
-    {
-        'id': '4',
-        'contributions': [
-            { '1': 10.0 },
-            { '2': 5.0 },
-            { '2': 10.0 },
-            { '3': 7.0 },
-            { '5': 5.0 }
-        ]
-    },
-    # {
-    #     'id': '5',
-    #     'contributions': [
-    #         { '1': 7.0 },
-    #         { '2': 10.0 },
-    #         { '3': 3.0 },
-    #         { '3': 7.0 }
-    #     ]
-    # }
-]
+# NEGATIVE_CONTRIBUTIONS = [
+#     {
+#         'id': '4',
+#         'contributions': [
+#             { '4': -10.0 },
+#             { '5': -5.0 },
+#             { '5': -5.0 }
+#         ]
+#     },
+#     # {
+#     #     'id': '5',
+#     #     'contributions': [
+#     #         { '7': -15.0 }
+#     #     ]
+#     # }
+# ]
 
-NEGATIVE_CONTRIBUTIONS = [
+NEGATIVE_CONTRIBUTIONS_V = [    
     {
         'id': '4',
         'contributions': [
-            { '4': -10.0 },
-            { '5': -5.0 },
-            { '5': -5.0 }
+            { '1002': -1.0 },
+            { '1003': -1.0 }
         ]
-    },
-    # {
-    #     'id': '5',
-    #     'contributions': [
-    #         { '7': -15.0 }
-    #     ]
-    # }
+    }
 ]
 
 
@@ -508,21 +527,56 @@ def run_combined_clr():
     Args: none
 
     Returns: grants clr award amounts
+
+    Example: using POSITIVE_CONTRIBUTIONS_V and NEGATIVE_CONTRIBUTIONS_V
+
+    Vitalik: "Here's a quick check: if 1000 people put 1 DAI positive votes, then a single person making a 1 DAI negative vote should have ~50% (or 50.1% or something like that) as much impact as two people each making a 1 DAI negative vote. If it's 4x more, or if the first case gives no decrease at all, then it's wrong"
+
+    # one negative vote / this is a decrease / should have about 50% impact as compared to two neg votes
+
+    # In [6]: t_
+    # Out[6]: [{'id': '4', 'clr_amount': 479308.8712794765}]
+
+    # In [7]: totals_pos_
+    # Out[7]: [{'id': '4', 'clr_amount': 480288.46154219954}]
+
+    # In [8]: totals_neg_
+    # Out[8]: [{'id': '4', 'clr_amount': 0.5}]
+
+    # (479308.8712794765 - 480288.46154219954) / 480288.46154219954
+
+    # = 0.002039587333781845
+
+    # 2 negative votes / should have more impact by 2x compared to 1 vote
+
+    # In [15]: t_
+    # Out[15]: [{'id': '4', 'clr_amount': 478349.181941649}]
+
+    # In [16]: totals_pos_
+    # Out[16]: [{'id': '4', 'clr_amount': 480288.46154219954}]
+
+    # In [17]: totals_neg_
+    # Out[17]: [{'id': '4', 'clr_amount': 1.9615384615384615}]
+
+    # (478349.181941649 - 480288.46154219954) / 480288.46154219954
+
+    # = 0.004037739308422146
 '''
 def run_separate_clr():
     start_time = time.time()
     # positive
-    positive_contributions = translate_data(POSITIVE_CONTRIBUTIONS)
+    positive_contributions = translate_data(POSITIVE_CONTRIBUTIONS_V)
     p_, tp_ = aggregate_contributions(positive_contributions)
     totals_pos_ = calculate_new_clr_separate(p_, tp_)
     # negative
-    negative_contributions = translate_data(NEGATIVE_CONTRIBUTIONS)
+    negative_contributions = translate_data(NEGATIVE_CONTRIBUTIONS_V)
     n_, tn_ = aggregate_contributions(negative_contributions)
     totals_neg_ = calculate_new_clr_separate(n_, tn_, positive=False)
     # final
-    t_ = calculate_new_clr_separate_final(totals_pos, totals_neg)
+    t_ = calculate_new_clr_separate_final(totals_pos_, totals_neg_)
     print('live calc runtime --- %s seconds ---' % (time.time() - start_time))
     return t_
+
 
 
 if __name__ == '__main__':
