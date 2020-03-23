@@ -80,6 +80,17 @@ POSITIVE_CONTRIBUTIONS_50 = [
     }
 ]
 
+POSITIVE_CONTRIBUTIONS_51 = [    
+    {
+        'id': '4',
+        'contributions': [
+            { '1': 25.0 },
+            { '2': 25.0 },
+            { '3': 1.0  }
+        ]
+    }
+]
+
 POSITIVE_CONTRIBUTIONS_25 = [    
     {
         'id': '4',
@@ -354,6 +365,13 @@ if __name__ == '__main__':
     print(f'Tp: {ep50}')
     print(f'Tn: {en50}')
     print(f'T: {e50}')
+
+    print('\n')
+    e51, ep51, en51 = run_r5_clr(POSITIVE_CONTRIBUTIONS_51)
+    print('A donates $25 (positive), B donates $25 (positive), C donates $1 (positive)')
+    print(f'Tp: {ep51}')
+    print(f'Tn: {en51}')
+    print(f'T: {e51}')
 
     print('\n')
     e501, ep501, en501 = run_r5_clr(POSITIVE_CONTRIBUTIONS_50, NEGATIVE_CONTRIBUTIONS_1)
