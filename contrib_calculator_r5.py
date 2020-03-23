@@ -255,7 +255,8 @@ def calculate_new_clr_separate(aggregated_contributions, pair_totals, threshold=
                     if k2 > k1:  # removes single donations but adds it in below, vitalik's formula
                         tot += ((v1 * v2) ** 0.5) / (pair_totals[k1][k2] / threshold + 1)
                     if k2 == k1:  # negative vote will count less if single, but will count
-                        tot += ((v1 * v2) ** 0.5) / (pair_totals[k1][k2] / 1 + 1)
+                        # tot += ((v1 * v2) ** 0.5) / (pair_totals[k1][k2] / 1 + 1)
+                        tot += ((v1 * v2) ** 0.5)
             bigtot += tot
             totals.append({'id': proj, 'clr_amount': tot})
 
@@ -360,29 +361,36 @@ if __name__ == '__main__':
     print(f'T: {e252}')
 
     print('\n')
-    e50, ep50, en50 = run_r5_clr(POSITIVE_CONTRIBUTIONS_50)
+    e50, ep50, en50 = run_r5_clr(POSITIVE_CONTRIBUTIONS_50, threshold=999999999999999.0)
     print('A donates $25 (positive), B donates $25 (positive)')
     print(f'Tp: {ep50}')
     print(f'Tn: {en50}')
     print(f'T: {e50}')
 
     print('\n')
-    e51, ep51, en51 = run_r5_clr(POSITIVE_CONTRIBUTIONS_51)
+    e51, ep51, en51 = run_r5_clr(POSITIVE_CONTRIBUTIONS_51, threshold=999999999999999.0)
     print('A donates $25 (positive), B donates $25 (positive), C donates $1 (positive)')
     print(f'Tp: {ep51}')
     print(f'Tn: {en51}')
     print(f'T: {e51}')
 
     print('\n')
-    e501, ep501, en501 = run_r5_clr(POSITIVE_CONTRIBUTIONS_50, NEGATIVE_CONTRIBUTIONS_1)
+    e501, ep501, en501 = run_r5_clr(POSITIVE_CONTRIBUTIONS_50, NEGATIVE_CONTRIBUTIONS_1, threshold=999999999999999.0)
     print('A donates $25 (positive), B donates $25 (positive), C donates $1 (negative)')
     print(f'Tp: {ep501}')
     print(f'Tn: {en501}')
     print(f'T: {e501}')
 
     print('\n')
-    e502, ep502, en502 = run_r5_clr(POSITIVE_CONTRIBUTIONS_50, NEGATIVE_CONTRIBUTIONS_2)
+    e502, ep502, en502 = run_r5_clr(POSITIVE_CONTRIBUTIONS_50, NEGATIVE_CONTRIBUTIONS_2, threshold=999999999999999.0)
     print('A donates $25 (positive), B donates $25 (positive), C donates $1 (negative), D donates $1 (negative)')
     print(f'Tp: {ep502}')
     print(f'Tn: {en502}')
     print(f'T: {e502}')
+
+    print('\n')
+    e511, ep511, en511 = run_r5_clr(POSITIVE_CONTRIBUTIONS_51, NEGATIVE_CONTRIBUTIONS_1, threshold=999999999999999.0)
+    print('A donates $25 (positive), B donates $25 (positive), C donates $1 (positive), D donates $1 (negative)')
+    print(f'Tp: {ep511}')
+    print(f'Tn: {en511}')
+    print(f'T: {e511}')
