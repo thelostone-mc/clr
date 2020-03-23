@@ -266,7 +266,7 @@ def calculate_new_clr_separate(aggregated_contributions, pair_totals, threshold=
 '''
 def calculate_new_clr_separate_final(totals_pos, totals_neg, total_pot=125000.0):
     # calculate final totals
-    totals = [{'id': x['id'], 'clr_amount': (math.sqrt(x['clr_amount']) - math.sqrt(y['clr_amount']))**2} if x['id'] == y['id'] and math.sqrt(x['clr_amount']) > 0 else {'id': x['id'], 'clr_amount': 0} for x in totals_pos for y in totals_neg]
+    totals = [{'id': x['id'], 'clr_amount': (math.sqrt(x['clr_amount']) - math.sqrt(y['clr_amount']))**2} if x['id'] == y['id'] and x['clr_amount'] > 0 else {'id': x['id'], 'clr_amount': 0} for x in totals_pos for y in totals_neg]
     
     # # find normalization factor
     # bigtot = 0 
