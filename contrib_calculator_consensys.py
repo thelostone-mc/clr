@@ -169,26 +169,26 @@ def calculate_clr_by_txn(_data, cap=999999999.0, bin_size=10, threshold=25.0, to
                 _res['one_match'] = cap
             _res['txns'] = x
 
-        # # normalization factor
-        # bigtot = 0
-        # for _res in totals:
-        #     bigtot += x['clr_amount']
-        # normalization_factor = bigtot / total_pot
+        # normalization factor
+        bigtot = 0
+        for _res in totals:
+            bigtot += _res['clr_amount']
+        normalization_factor = bigtot / total_pot
 
-        # # modify totals
-        # for x in totals:
-        #     x['clr_amount'] = x['clr_amount'] / normalization_factor
-
-        # # make sure normalization factor works
-        # bigtot = 0
-        # for x in totals:
-        #     bigtot += x['clr_amount']
-        
-        # # how to exclude capped ones out once they hit limit?
-        # # subtract capped, then normalize on remaining?
-        # # normalize totals
+        # modify totals
+        for _res in totals:
+            if normalization_factor != 0:
+                _res['clr_amount'] = _res['clr_amount'] / normalization_factor
 
         res.append(totals)
+
+    # fill in missing data
+    all_ids = [x['id'] for x in res[len(res)-1]]
+    for _, x in enumerate(res):
+        _temp_ids = [y['id'] for y in x]
+        _missing_ids = list(set(all_ids) - set(_temp_ids))
+        for z in _missing_ids:
+            x.append({'id': z, 'clr_amount': 0, 'one_match': 0, 'num_contrib': 0, 'avg_ca': 0, 'txns': _})
 
     dict_list = []
     for x in res:
@@ -206,17 +206,19 @@ def calculate_clr_by_txn(_data, cap=999999999.0, bin_size=10, threshold=25.0, to
 '''
     Shows us distribution plot of clr match amount on grant by txn time.
 
-    Args: cleaned dataset [id, clr_amount, txns]
+    Args: 
+        fdata = cleaned dataset [id, clr_amount, txns]
+        y_value = (clr_amount or one_match)
+        _title = (title of graph)
 
     Returns: multiple distribution plots (facetgrid)
 '''
-def distribution_plot(final_data):
-    g = sns.FacetGrid(final_data, col='txns', hue='txns', palette='tab20c', col_wrap=4, height=1.5)
-    g.map(sns.barplot, 'id', 'clr_amount')
+def distribution_plot(fdata, y_val, _title):
+    g = sns.FacetGrid(fdata, col='txns', hue='txns', palette='tab20c', col_wrap=2, height=2, sharey=True, sharex=True)
+    g.map(sns.barplot, 'id', y_val) #hue='id')
     for ax in g.axes.flat:
-        for label in ax.get_xticklabels():
-            label.set_rotation(90)
-    # why are some axis labels missing?
+        _ = ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+    g.fig.suptitle(_title)
     plt.show()
 
 
@@ -224,14 +226,22 @@ def distribution_plot(final_data):
 if __name__ == '__main__':
 
 tp = get_data('r5_health.csv', 'health', _random=True, _seed=9)
-f = calculate_clr_by_txn(tp, cap=9999999999.0, bin_size=100, threshold=25.0, total_pot=0.0)
 
-f[f['txns'] == 100]
-f[f['txns'] == 900]
+f = calculate_clr_by_txn(tp, cap=9999999999.0, bin_size=100, threshold=25.0, total_pot=50000.0)
+distribution_plot(f, 'clr_amount', 'no_cap_norm_clr')
+distribution_plot(f, 'one_match', 'no_cap_1:1')
 
-# distribution_plot(f)
+ff = calculate_clr_by_txn(tp, cap=10000.0, bin_size=100, threshold=25.0, total_pot=50000.0)
+distribution_plot(ff, 'clr_amount', 'cap_norm_clr')
+distribution_plot(ff, 'one_match', 'cap_1:1')
 
-# cap clr
-# no cap clr
-# cap 1:1
-# no cap 1:1
+# scenario with norm constant?
+
+distribution_plot(f, 'num_contrib', 'num_contribs')
+distribution_plot(f, 'avg_ca', 'average_value')
+
+
+# X deal with missing values
+# set xaxis
+# coloring of graph
+# then re-run
