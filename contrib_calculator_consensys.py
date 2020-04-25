@@ -157,11 +157,13 @@ def calculate_clr(aggregated_contributions, pair_totals, threshold=25.0, total_p
 '''
 def calculate_clr_by_txn(_data, cap=999999999.0, bin_size=10, threshold=25.0, total_pot=0.0):
     res = []
-    # for every incremental transaction
+
+    # for every incremental transaction, calculate clr
     for x in range(0, len(_data)):
         agg_contribs, pair_tots = aggregate_contributions(_data[0: x])
         totals = calculate_clr(agg_contribs, pair_tots, threshold=threshold, total_pot=total_pot)
         
+        # for every clr result, implement cap if necessary
         for _res in totals:
             if _res['clr_amount'] >= cap:
                 _res['clr_amount'] = cap
@@ -169,16 +171,23 @@ def calculate_clr_by_txn(_data, cap=999999999.0, bin_size=10, threshold=25.0, to
                 _res['one_match'] = cap
             _res['txns'] = x
 
-        # normalization factor
-        bigtot = 0
+        # post normalization factor (locks cap)
+        _temp_total = copy.deepcopy(total_pot)
         for _res in totals:
-            bigtot += _res['clr_amount']
-        normalization_factor = bigtot / total_pot
+            if _res['clr_amount'] == cap:
+                _temp_total -= cap
+        _bigtot = 0 
+        for _res in totals:
+            if _res['clr_amount'] < cap:
+                _bigtot += _res['clr_amount']
+            _normalization_factor = _bigtot / _temp_total
 
-        # modify totals
+        # modify totals using post normalization factor
         for _res in totals:
-            if normalization_factor != 0:
-                _res['clr_amount'] = _res['clr_amount'] / normalization_factor
+            if _res['clr_amount'] < cap and _normalization_factor != 0:
+                _res['clr_amount'] = _res['clr_amount'] / _normalization_factor
+            if _res['clr_amount'] == cap:
+                _res['clr_amount'] = _res['clr_amount']
 
         res.append(totals)
 
@@ -190,11 +199,12 @@ def calculate_clr_by_txn(_data, cap=999999999.0, bin_size=10, threshold=25.0, to
         for z in _missing_ids:
             x.append({'id': z, 'clr_amount': 0, 'one_match': 0, 'num_contrib': 0, 'avg_ca': 0, 'txns': _})
 
+    # select bin size, exclude 0
     dict_list = []
     for x in res:
         for y in x:
             dict_list.append(y)
-    dict_list = [d for d in dict_list if d['txns'] % bin_size == 0]
+    dict_list = [d for d in dict_list if d['txns'] % bin_size == 0 and d['txns'] != 0]
 
     final = pd.DataFrame.from_dict(dict_list)
     final = final.drop_duplicates()
@@ -214,8 +224,8 @@ def calculate_clr_by_txn(_data, cap=999999999.0, bin_size=10, threshold=25.0, to
     Returns: multiple distribution plots (facetgrid)
 '''
 def distribution_plot(fdata, y_val, _title):
-    g = sns.FacetGrid(fdata, col='txns', hue='txns', palette='tab20c', col_wrap=2, height=2, sharey=True, sharex=True)
-    g.map(sns.barplot, 'id', y_val) #hue='id')
+    g = sns.FacetGrid(fdata, col='txns', palette='tab20c', col_wrap=2, height=2, sharey=True, sharex=True)
+    g.map(sns.barplot, 'id', y_val)
     for ax in g.axes.flat:
         _ = ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
     g.fig.suptitle(_title)
@@ -231,17 +241,9 @@ f = calculate_clr_by_txn(tp, cap=9999999999.0, bin_size=100, threshold=25.0, tot
 distribution_plot(f, 'clr_amount', 'no_cap_norm_clr')
 distribution_plot(f, 'one_match', 'no_cap_1:1')
 
-ff = calculate_clr_by_txn(tp, cap=10000.0, bin_size=100, threshold=25.0, total_pot=50000.0)
+ff = calculate_clr_by_txn(tp, cap=5000.0, bin_size=100, threshold=25.0, total_pot=50000.0)
 distribution_plot(ff, 'clr_amount', 'cap_norm_clr')
 distribution_plot(ff, 'one_match', 'cap_1:1')
 
-# scenario with norm constant?
-
 distribution_plot(f, 'num_contrib', 'num_contribs')
 distribution_plot(f, 'avg_ca', 'average_value')
-
-
-# X deal with missing values
-# set xaxis
-# coloring of graph
-# then re-run
