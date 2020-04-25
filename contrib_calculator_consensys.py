@@ -157,37 +157,38 @@ def calculate_clr(aggregated_contributions, pair_totals, threshold=25.0, total_p
 '''
 def calculate_clr_by_txn(_data, cap=999999999.0, bin_size=10, threshold=25.0, total_pot=0.0):
     res = []
-
     # for every incremental transaction, calculate clr
     for x in range(0, len(_data)):
         agg_contribs, pair_tots = aggregate_contributions(_data[0: x])
         totals = calculate_clr(agg_contribs, pair_tots, threshold=threshold, total_pot=total_pot)
-        
+
+        # add txn identifier
+        for _res in totals:
+            _res['txns'] = x
+
         # for every clr result, implement cap if necessary
         for _res in totals:
             if _res['clr_amount'] >= cap:
                 _res['clr_amount'] = cap
             if _res['one_match'] >= cap:
                 _res['one_match'] = cap
-            _res['txns'] = x
 
-        # post normalization factor (locks cap)
-        _temp_total = copy.deepcopy(total_pot)
-        for _res in totals:
-            if _res['clr_amount'] == cap:
-                _temp_total -= cap
-        _bigtot = 0 
-        for _res in totals:
-            if _res['clr_amount'] < cap:
-                _bigtot += _res['clr_amount']
-            _normalization_factor = _bigtot / _temp_total
+        # # post normalization factor (locks cap)
+        # # for earlier iterations normalizing may cause > cap values
+        # _temp_total = copy.deepcopy(total_pot)
+        # for _res in totals:
+        #     if _res['clr_amount'] == cap:
+        #         _temp_total -= cap
+        # _bigtot = 0 
+        # for _res in totals:
+        #     if _res['clr_amount'] < cap:
+        #         _bigtot += _res['clr_amount']
+        #     _normalization_factor = _bigtot / _temp_total
 
-        # modify totals using post normalization factor
-        for _res in totals:
-            if _res['clr_amount'] < cap and _normalization_factor != 0:
-                _res['clr_amount'] = _res['clr_amount'] / _normalization_factor
-            if _res['clr_amount'] == cap:
-                _res['clr_amount'] = _res['clr_amount']
+        # # modify totals using post normalization factor
+        # for _res in totals:
+        #     if _res['clr_amount'] < cap and _normalization_factor != 0:
+        #         _res['clr_amount'] = _res['clr_amount'] / _normalization_factor
 
         res.append(totals)
 
@@ -229,21 +230,23 @@ def distribution_plot(fdata, y_val, _title):
     for ax in g.axes.flat:
         _ = ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
     g.fig.suptitle(_title)
-    plt.show()
+    # plt.show()
+    g.fig.set_size_inches(20, 10)
+    g.savefig(_title, bbox_inches='tight')
 
 
 
 if __name__ == '__main__':
 
-tp = get_data('r5_health.csv', 'health', _random=True, _seed=9)
+    tp = get_data('r5_health.csv', 'health', _random=True, _seed=9)
 
-f = calculate_clr_by_txn(tp, cap=9999999999.0, bin_size=100, threshold=25.0, total_pot=50000.0)
-distribution_plot(f, 'clr_amount', 'no_cap_norm_clr')
-distribution_plot(f, 'one_match', 'no_cap_1:1')
+    f = calculate_clr_by_txn(tp, cap=9999999999.0, bin_size=100, threshold=25.0, total_pot=50000.0)
+    distribution_plot(f, 'clr_amount', 'no_cap_clr')
+    distribution_plot(f, 'one_match', 'no_cap_1:1')
 
-ff = calculate_clr_by_txn(tp, cap=5000.0, bin_size=100, threshold=25.0, total_pot=50000.0)
-distribution_plot(ff, 'clr_amount', 'cap_norm_clr')
-distribution_plot(ff, 'one_match', 'cap_1:1')
+    ff = calculate_clr_by_txn(tp, cap=5000.0, bin_size=100, threshold=25.0, total_pot=50000.0)
+    distribution_plot(ff, 'clr_amount', 'cap_clr')
+    distribution_plot(ff, 'one_match', 'cap_1:1')
 
-distribution_plot(f, 'num_contrib', 'num_contribs')
-distribution_plot(f, 'avg_ca', 'average_value')
+    distribution_plot(f, 'num_contrib', 'num_contribs')
+    distribution_plot(f, 'avg_ca', 'average_value')
