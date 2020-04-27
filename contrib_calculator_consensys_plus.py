@@ -255,22 +255,7 @@ def distribution_plot(fdata, pot, cap, y_val):
 
 
 if __name__ == '__main__':
-    tp = get_data('r5_health.csv', 'health', _random=True, _seed=9)
-    '''
-        clr & 1:1 matches @ every combination with 
-        (max pot 30k, increments of 10k),
-        (cap 5-50%, increments of 5),
-        (1000 aggregated transactions/users, distribution by every 100 txns)
-    '''
-    ff = calculate_clr_by_txn(
-        tp, 
-        threshold=25.0, 
-        upper_pot=30000, 
-        pot_by=10000, 
-        cap_by=5, 
-        txns=1000, 
-        bin_size=100
-    )
+
 
     distribution_plot(ff, 20000, 10, 'clr_amount')
     distribution_plot(ff, 20000, 10, 'one_match')
