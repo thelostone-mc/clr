@@ -241,12 +241,12 @@ if __name__ == '__main__':
     tp = get_data('r5_health.csv', 'health', _random=True, _seed=9)
 
     f = calculate_clr_by_txn(tp, cap=9999999999.0, bin_size=100, threshold=25.0, total_pot=50000.0)
-    distribution_plot(f, 'clr_amount', 'no_cap_clr')
-    distribution_plot(f, 'one_match', 'no_cap_1:1')
+    distribution_plot(f, 'clr_amount', 'result_no_cap_clr')
+    distribution_plot(f, 'one_match', 'result_no_cap_1:1')
 
     ff = calculate_clr_by_txn(tp, cap=5000.0, bin_size=100, threshold=25.0, total_pot=50000.0)
-    distribution_plot(ff, 'clr_amount', 'cap_clr')
-    distribution_plot(ff, 'one_match', 'cap_1:1')
+    distribution_plot(ff, 'clr_amount', 'result_cap_clr')
+    distribution_plot(ff, 'one_match', 'result_cap_1:1')
 
-    distribution_plot(f, 'num_contrib', 'num_contribs')
-    distribution_plot(f, 'avg_ca', 'average_value')
+    distribution_plot(f, 'num_contrib', 'result_num_contribs')
+    distribution_plot(f, 'avg_ca', 'result_average_value')
