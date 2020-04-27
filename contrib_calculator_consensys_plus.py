@@ -7,9 +7,6 @@ import numpy as np
 import pandas as pd 
 import seaborn as sns
 import matplotlib.pyplot as plt
-from bokeh.plotting import figure, output_file, show, ColumnDataSource, curdoc
-from bokeh.layouts import column, row
-from bokeh.models import TextInput
 
 
 
@@ -165,7 +162,7 @@ def calculate_clr_by_txn(_data, threshold=25.0, upper_pot=30000, pot_by=10000, c
     for total_pot in poss_total_pots:
         for cap in poss_caps:
             # for every incremental transaction, calculate clr
-            for x in range(0, txns, bin_size):
+            for x in range(0, txns + bin_size, bin_size):
                 agg_contribs, pair_tots = aggregate_contributions(_data[0: x])
                 totals = calculate_clr(agg_contribs, pair_tots, threshold=threshold, total_pot=total_pot)
 
@@ -245,62 +242,45 @@ def calculate_clr_by_txn(_data, threshold=25.0, upper_pot=30000, pot_by=10000, c
 
     Returns: multiple distribution plots (facetgrid)
 '''
-def distribution_plot(fdata, y_val, _title):
-    g = sns.FacetGrid(fdata, col='txns', palette='tab20c', col_wrap=2, height=2, sharey=True, sharex=True)
+def distribution_plot(fdata, pot, cap, y_val):
+    g = sns.FacetGrid(fdata[(fdata['total_pot']==pot) & (fdata['cap_pct']==cap/100)], col='txns', palette='tab20c', col_wrap=2, height=2, sharey=True, sharex=True)
     g.map(sns.barplot, 'id', y_val)
     for ax in g.axes.flat:
         _ = ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
-    g.fig.suptitle(_title)
+    g.fig.suptitle(f'total_pot_{pot}_cap_{cap}_{y_val}')
     # plt.show()
     g.fig.set_size_inches(20, 10)
-    g.savefig(_title, bbox_inches='tight')
-
-
-
-'''
-    Shows us distribution plot of clr match amount on grant by txn time.
-
-    Args: 
-        fdata = cleaned dataset [id, clr_amount, txns]
-        y_value = (clr_amount or one_match)
-        _title = (title of graph)
-
-    Returns: multiple distribution plots (facetgrid)
-'''
-def bokeh_dist_plot(fdata, y_val, _title):
-    g = sns.FacetGrid(fdata, col='txns', palette='tab20c', col_wrap=2, height=2, sharey=True, sharex=True)
-    g.map(sns.barplot, 'id', y_val)
-    for ax in g.axes.flat:
-        _ = ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
-    g.fig.suptitle(_title)
-    # plt.show()
-    g.fig.set_size_inches(20, 10)
-    g.savefig(_title, bbox_inches='tight')
+    g.savefig(f'total_pot_{pot}_cap_{cap}_{y_val}', bbox_inches='tight')
 
 
 
 if __name__ == '__main__':
-
     tp = get_data('r5_health.csv', 'health', _random=True, _seed=9)
-
-    # all possible CLR & 1:1 matches with pot, cap, txn/user size options
-    ff = calculate_clr_by_txn(tp, threshold=25.0, upper_pot=30000, pot_by=10000, cap_by=5, txns=1100, bin_size=100)
-    ff = calculate_clr_by_txn(tp, threshold=25.0, upper_pot=50000, pot_by=5000, cap_by=10, txns=1100, bin_size=100)
-
-
-
-    # distribution_plot(f, 'clr_amount', 'no_cap_clr')
-    # distribution_plot(f, 'one_match', 'no_cap_1:1')
-
-    # distribution_plot(ff, 'clr_amount', 'cap_clr')
-    # distribution_plot(ff, 'one_match', 'cap_1:1')
-
-    # distribution_plot(f, 'num_contrib', 'num_contribs')
-    # distribution_plot(f, 'avg_ca', 'average_value')
+    '''
+        clr & 1:1 matches @ every combination with 
+        (max pot 30k, increments of 10k),
+        (cap 5-50%, increments of 5),
+        (1000 aggregated transactions/users, distribution by every 100 txns)
+    '''
+    ff = calculate_clr_by_txn(
+        tp, 
+        threshold=25.0, 
+        upper_pot=30000, 
+        pot_by=10000, 
+        cap_by=5, 
+        txns=1000, 
+        bin_size=100
+    )
+    distribution_plot(ff, 20000, 10, 'clr_amount')
 
 
 
     # # playing around with bokeh sliders
+
+    # from bokeh.plotting import figure, output_file, show, ColumnDataSource, curdoc
+    # from bokeh.layouts import column, row
+    # from bokeh.models import TextInput
+
     # fff = ff[ff['txns'].isin([500, 600])]
     # fff = ff[ff['txns'] == 500]
 
