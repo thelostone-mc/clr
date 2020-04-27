@@ -157,7 +157,7 @@ def calculate_clr(aggregated_contributions, pair_totals, threshold=25.0, total_p
 '''
 def calculate_clr_by_txn(_data, threshold=25.0, upper_pot=30000, pot_by=10000, cap_by=5, txns=1100, bin_size=100):
     poss_total_pots = [x for x in range(10000, upper_pot, pot_by)]
-    poss_caps = [(x / 100) for x in range(5, 60, cap_by)]
+    poss_caps = [(x / 100) for x in range(5, 60, cap_by)] + [99999999]
     res = []
     for total_pot in poss_total_pots:
         for cap in poss_caps:
@@ -271,7 +271,11 @@ if __name__ == '__main__':
         txns=1000, 
         bin_size=100
     )
+
     distribution_plot(ff, 20000, 10, 'clr_amount')
+    distribution_plot(ff, 20000, 10, 'one_match')
+    distribution_plot(ff, 20000, 9999999900, 'clr_amount')
+    distribution_plot(ff, 20000, 9999999900, 'one_match')
 
 
 
