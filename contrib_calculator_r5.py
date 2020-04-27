@@ -137,15 +137,16 @@ import pandas as pd
     Returns: list of lists of different grant category types 
         [[grant_id (str), user_id (str), contribution_amount (float)]]
 '''
-def get_data(pos_name, neg_name):
+def get_data(pos_file, pos_file_health, neg_file):
     # read data
-    df = pd.read_csv(pos_name)
-    dfn = pd.read_csv(neg_name)
+    df = pd.read_csv(pos_file)
+    dfh = pd.read_csv(pos_file_health)
+    dfn = pd.read_csv(neg_file)
     
     # positive categories
     tech_pos = df[df['grant_type'] == 'tech']
     media_pos = df[df['grant_type'] == 'media']
-    health_pos = df[df['grant_type'] == 'health']
+    health_pos = dfh[dfh['grant_type'] == 'health']
 
     # negative categories
     tech_neg = dfn[dfn['grant_type'] == 'tech']
@@ -357,7 +358,7 @@ def run_r5_clr(positive_contributions, negative_contributions=None, threshold=25
 
 
 if __name__ == '__main__':
-    tech_pos, media_pos, health_pos, tech_neg, media_neg, health_neg = get_data('r5_pos.csv', 'r5_neg.csv')
+    tech_pos, media_pos, health_pos, tech_neg, media_neg, health_neg = get_data('r5_tech_media_7712.csv', 'r5_health_1163.csv', 'r5_media_neg_19.csv')
 
     t, tp, tn = run_r5_clr(tech_pos, tech_neg, total_pot = 101000.0)
     m, mp, mn = run_r5_clr(media_pos, media_neg, total_pot = 50000.0)
