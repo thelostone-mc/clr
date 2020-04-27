@@ -276,6 +276,8 @@ if __name__ == '__main__':
     distribution_plot(ff, 20000, 10, 'one_match')
     distribution_plot(ff, 20000, 9999999900, 'clr_amount')
     distribution_plot(ff, 20000, 9999999900, 'one_match')
+    distribution_plot(ff, 20000, 9999999900, 'num_contrib')
+    distribution_plot(ff, 20000, 9999999900, 'avg_ca')
 
 
 
