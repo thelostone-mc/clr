@@ -251,7 +251,7 @@ def aggregate_contributions(grant_contributions):
     Returns:
         totals: total clr award by grant, normalized by the normalization factor
 '''
-def calculate_new_clr(aggregated_contributions, pair_totals, threshold=25.0, total_pot=0.0, positive=True):
+def calculate_new_clr(aggregated_contributions, pair_totals, threshold=20.0, total_pot=0.0, positive=True):
     bigtot = 0
     totals = []
     if positive:
@@ -336,7 +336,7 @@ def calculate_new_clr_final(totals_pos, totals_neg, total_pot=0.0):
 
     Returns: grants clr award amounts
 '''
-def run_r5_clr(positive_contributions, negative_contributions=None, threshold=25.0, total_pot=0.0):
+def run_r5_clr(positive_contributions, negative_contributions=None, threshold=20.0, total_pot=0.0):
     start_time = time.time()
     
     # positive
@@ -358,10 +358,10 @@ def run_r5_clr(positive_contributions, negative_contributions=None, threshold=25
 
 
 if __name__ == '__main__':
-    tech_pos, media_pos, health_pos, tech_neg, media_neg, health_neg = get_data('r5_tech_media_7712.csv', 'r5_health_1163.csv', 'r5_media_neg_19.csv')
+    tech_pos, media_pos, health_pos, tech_neg, media_neg, health_neg = get_data('r5_raw_tech_media_7712.csv', 'r5_raw_health_1163.csv', 'r5_raw_media_neg_19.csv')
 
     t, tp, tn = run_r5_clr(tech_pos, tech_neg, total_pot = 101000.0)
-    m, mp, mn = run_r5_clr(media_pos, media_neg, total_pot = 50000.0)
+    m, mp, mn = run_r5_clr(media_pos, media_neg, total_pot = 50120.0)
     h, hp, hn = run_r5_clr(health_pos, health_neg, total_pot = 100000.0)
 
 
