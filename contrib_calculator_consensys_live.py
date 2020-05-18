@@ -108,7 +108,7 @@ def calculate_clr(aggregated_contributions, pair_totals, threshold=999999999.0, 
 
     # find normalization factor
     normalization_factor = bigtot / total_pot
-    print(normalization_factor)
+
     # modify totals
     for result in totals:
         result['clr_amount'] = result['clr_amount'] / normalization_factor
@@ -118,7 +118,7 @@ def calculate_clr(aggregated_contributions, pair_totals, threshold=999999999.0, 
 
 
 if __name__ == '__main__':
-    d = get_data('r5_raw_tech_media_7712.csv', 'tech', _random=True, _seed=9, num_grants=8, txns=2000)
+    d = get_data('r5_raw_tech_media_7712.csv', 'tech', _random=True, _seed=9, num_grants=8, txns=200)
     selected_ids = list(set([str(x[0]) for x in d]))
 
     aggregated_pair_zipped = aggregate_contributions(d, selected_ids)
