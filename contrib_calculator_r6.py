@@ -3,6 +3,7 @@ import math
 import time
 import copy
 import pandas as pd 
+from pprint import pprint
 
 
 
@@ -14,7 +15,7 @@ import pandas as pd
             'filename.csv'
 
     returns: 
-        list of lists of grant data 
+        list of lists of grant data x 2
             [[grant_id (str), user_id (str), contribution_amount (float)]]
 '''
 def get_data(csv_file):
@@ -69,62 +70,92 @@ def translate_data(grants_data):
 
 
 '''
-    combine previous round 1/3 contributions with current round contributions
-
-    args: previous round contributions list of lists
-
-    returns: list of lists of combined contributions
-        [[grant_id (str), user_id (str), contribution_amount (float)]]
-
-'''
-def combine_previous_round(previous, current):
-    for x in previous:
-        x[2] = x[2]/3.0
-    combined = current + previous
-
-    return combined
-
-
-
-'''
     aggregates contributions by contributor, and calculates total contributions by unique pairs
 
     args: 
         list of lists of grant data
             [[grant_id (str), user_id (str), contribution_amount (float)]]
+        round
+            str ('current' or 'previous') only
 
     returns: 
-        aggregated contributions by pair & total contributions by pair
-            {grant_id (str): {user_id (str): aggregated_amount (float)}}
-            {user_id (str): {user_id (str): pair_total (float)}}
+        aggregated contributions by pair in nested list
+            {
+                round: {
+                    grant_id (str): {
+                        user_id (str): aggregated_amount (float)
+                    }
+                }
+            }
 '''
-def aggregate_contributions(grant_contributions):
+def aggregate_contributions(grant_contributions, round='current'):
+    round_dict = {}
     contrib_dict = {}
     for proj, user, amount in grant_contributions:
         if proj not in contrib_dict:
             contrib_dict[proj] = {}
         contrib_dict[proj][user] = contrib_dict[proj].get(user, 0) + amount
+    round_dict[round] = contrib_dict
 
+    return round_dict
+
+
+
+'''
+    gets pair totals between current round, current and previous round
+
+    args:
+        aggregated contributions by pair in nested dict
+            {
+                round: {
+                    grant_id (str): {
+                        user_id (str): aggregated_amount (float)
+                    }
+                }
+            }
+
+    returns:
+        pair totals between current round, current and previous round
+            {user_id (str): {user_id (str): pair_total (float)}}
+
+'''
+def get_totals_by_pair_round(contrib_dict):
     tot_overlap = {}
-    for proj, contribz in contrib_dict.items():
+    
+    # start pairwise match
+    for proj, contribz in contrib_dict['current'].items():
         for k1, v1 in contribz.items():
             if k1 not in tot_overlap:
                 tot_overlap[k1] = {}
+            
+            # pairwise matches to current round
             for k2, v2 in contribz.items():
                 if k2 not in tot_overlap[k1]:
                     tot_overlap[k1][k2] = 0
                 tot_overlap[k1][k2] += (v1 * v2) ** 0.5
+            
+            # pairwise matches to last round
+            if contrib_dict['previous'].get(proj):
+                for x1, y1 in contrib_dict['previous'][proj].items():
+                    if x1 not in tot_overlap[k1]:
+                        tot_overlap[k1][x1] = 0
+                    tot_overlap[k1][x1] += (v1 * y1) ** 0.5
 
-    return contrib_dict, tot_overlap
+    return tot_overlap
 
 
 
 '''
     calculates the clr amount at the given threshold and total pot
-
     args:
-        aggregated_contributions
-            {grant_id (str): {user_id (str): aggregated_amount (float)}}
+        aggregated_contributions by pair in nested dict
+            {
+                round: {
+                    grant_id (str): {
+                        user_id (str): aggregated_amount (float)
+                    }
+                }
+            }
         pair_totals
             {user_id (str): {user_id (str): pair_total (float)}}
         threshold
@@ -138,16 +169,27 @@ def aggregate_contributions(grant_contributions):
         saturation point
             boolean
 '''
-def calculate_clr(aggregated_contributions, pair_totals, threshold=25.0, total_pot=0.0):
+def calculate_clr_round(aggregated_contributions, pair_totals, threshold=25.0, total_pot=100000.0):
     saturation_point = False
     bigtot = 0
     totals = []
-    for proj, contribz in aggregated_contributions.items():
+    for proj, contribz in aggregated_contributions['current'].items():
         tot = 0
+
+        # start pairwise matches
         for k1, v1 in contribz.items():
+
+            # pairwise matches to current round
             for k2, v2 in contribz.items():
-                if k2 > k1:  # removes single donations, vitalik's formula
+                if k2 > k1:
                     tot += ((v1 * v2) ** 0.5) / (pair_totals[k1][k2] / threshold + 1)
+
+            # pairwise matches to last round
+            if aggregated_contributions['previous'].get(proj):
+                for x1, y1 in aggregated_contributions['previous'][proj].items():
+                    if x1 > k1:
+                        tot += ((v1 * y1) ** 0.5) / (pair_totals[k1][x1] / threshold + 1)
+
         bigtot += tot
         totals.append({'id': proj, 'clr_amount': tot})
 
@@ -179,25 +221,82 @@ def calculate_clr(aggregated_contributions, pair_totals, threshold=25.0, total_p
     returns: 
         grants clr award amounts
 '''
-def run_calcs(csv_file, threshold=20.0, total_pot=101000.0):
+def run_calcs(csv_file, threshold=25.0, total_pot=100000.0):
+    start_time = time.time()
     prev_round, curr_round = get_data(csv_file)
-    
-    # combined round
-    start_time = time.time()
-    comb_round = combine_previous_round(prev_round, curr_round)
-    agg_contribs, pair_tots = aggregate_contributions(comb_round)
-    totals, sat_pot = calculate_clr(agg_contribs, pair_tots, threshold=threshold, total_pot=total_pot)
-    print('live calc runtime --- %s seconds ---' % (time.time() - start_time))
-
-    # curr_round only
-    start_time = time.time()
-    agg_contribs_c, pair_tots_c = aggregate_contributions(curr_round)
-    totals_c, sat_pot_c = calculate_clr(agg_contribs_c, pair_tots_c, threshold=threshold, total_pot=total_pot)
+    agg6 = aggregate_contributions(curr_round, 'current')
+    agg5 = aggregate_contributions(prev_round, 'previous')
+    combinedagg = {**agg5, **agg6}
+    ptots= get_totals_by_pair_round(combinedagg)
+    totals = calculate_clr_round(combinedagg, ptots, threshold=threshold, total_pot=total_pot)
     print('live calc runtime --- %s seconds ---' % (time.time() - start_time))
  
-    return totals, totals_c
+    return totals
 
 
 
 if __name__ == '__main__':
-    t, tc = run_calcs('r4_r5_tech_contribs_5004_5678.csv')
+    t = run_calcs('r4_r5_tech_contribs_5004_5678.csv')
+    pprint(t)
+
+
+
+##########################
+
+# CHECK
+# zero contributions to a grant in r6 = 0 match
+# first contribution to a grant in r6 pairwise match 
+#     include all permutations in r6 and between r6 and r5
+#     exclude diagonals (r6a, r6a) and (r6a, r5a)
+#     exclude permutations in r5 1/3 contributors
+
+# # # TESTING
+
+# # # can't combine at this level because it would aggregate prev & curr rounds
+# # combined = curr_round_res + prev_round_res
+
+# # # separate aggregate contributions otherwise it'll all be counted as one
+# # # you can't have dual keys in dicts, nest again or list of lists
+
+# # curr_round_res = [x for x in curr_round if x[0] in [490.0, 86.0, 526.0]]
+# # curr_round_set = list(set([x[0] for x in curr_round_res]))
+# # prev_round_res = [x for x in prev_round if x[0] in curr_round_set]
+
+# agg6 = aggregate_contributions(curr_round_res, 'current')
+# agg5 = aggregate_contributions(prev_round_res, 'previous')
+
+# # use nested dictionary
+# combinedagg = {**agg5, **agg6}
+
+# # combinedagg smaller version
+# combinedaggsmall = {
+#     'previous': {
+#         86.0: {
+#             73120.0: 1.0,
+#             72055.0: 5.0,
+#             28361.0: 10.0,
+#             8899.0: 10
+#         }
+#         90.0: {
+#             100.0: 50.0,
+#             200.0: 50.0
+#         }
+#     },
+#     'current': {
+#         86.0: {
+#             7766.0: 5.0,
+#             8899.0: 10
+#         },
+#         90.0: {
+#             1.0: 5.0,
+#             10.0: 50.0
+#         }
+#     }
+# }
+
+# # the end result is still by project because of the for loop proj
+# # get pairs between current and previous and add on to tot_overlap?
+# ptots_curr_small = get_totals_by_pair_round(combinedaggsmall)
+
+# # calculate clr with current & previous pairs
+# res = calculate_clr_round(combinedagg, ptots_curr, threshold=25.0, total_pot=100000.0)
