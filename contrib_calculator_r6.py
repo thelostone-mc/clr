@@ -119,7 +119,7 @@ def aggregate_contributions(grant_contributions, round='current'):
             {user_id (str): {user_id (str): pair_total (float)}}
 
 '''
-def get_totals_by_pair_round(contrib_dict):
+def get_totals_by_pair(contrib_dict):
     tot_overlap = {}
     
     # start pairwise match
@@ -169,7 +169,7 @@ def get_totals_by_pair_round(contrib_dict):
         saturation point
             boolean
 '''
-def calculate_clr_round(aggregated_contributions, pair_totals, threshold=25.0, total_pot=100000.0):
+def calculate_clr(aggregated_contributions, pair_totals, threshold=25.0, total_pot=100000.0):
     saturation_point = False
     bigtot = 0
     totals = []
@@ -227,8 +227,8 @@ def run_calcs(csv_file, threshold=25.0, total_pot=100000.0):
     agg6 = aggregate_contributions(curr_round, 'current')
     agg5 = aggregate_contributions(prev_round, 'previous')
     combinedagg = {**agg5, **agg6}
-    ptots= get_totals_by_pair_round(combinedagg)
-    totals = calculate_clr_round(combinedagg, ptots, threshold=threshold, total_pot=total_pot)
+    ptots= get_totals_by_pair(combinedagg)
+    totals = calculate_clr(combinedagg, ptots, threshold=threshold, total_pot=total_pot)
     print('live calc runtime --- %s seconds ---' % (time.time() - start_time))
  
     return totals
@@ -296,7 +296,7 @@ if __name__ == '__main__':
 
 # # the end result is still by project because of the for loop proj
 # # get pairs between current and previous and add on to tot_overlap?
-# ptots_curr_small = get_totals_by_pair_round(combinedaggsmall)
+# ptots_curr_small = get_totals_by_pair(combinedaggsmall)
 
 # # calculate clr with current & previous pairs
-# res = calculate_clr_round(combinedagg, ptots_curr, threshold=25.0, total_pot=100000.0)
+# res = calculate_clr(combinedagg, ptots_curr, threshold=25.0, total_pot=100000.0)
