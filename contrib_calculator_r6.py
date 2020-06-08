@@ -92,6 +92,8 @@ def aggregate_contributions(grant_contributions, round='current'):
     round_dict = {}
     contrib_dict = {}
     for proj, user, amount in grant_contributions:
+        if round == 'previous':
+            amount = amount / 3
         if proj not in contrib_dict:
             contrib_dict[proj] = {}
         contrib_dict[proj][user] = contrib_dict[proj].get(user, 0) + amount
