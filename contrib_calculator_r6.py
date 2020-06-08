@@ -88,16 +88,16 @@ def translate_data(grants_data):
                 }
             }
 '''
-def aggregate_contributions(grant_contributions, round='current'):
+def aggregate_contributions(grant_contributions, _round='current'):
     round_dict = {}
     contrib_dict = {}
     for proj, user, amount in grant_contributions:
-        if round == 'previous':
+        if _round == 'previous':
             amount = amount / 3
         if proj not in contrib_dict:
             contrib_dict[proj] = {}
         contrib_dict[proj][user] = contrib_dict[proj].get(user, 0) + amount
-    round_dict[round] = contrib_dict
+    round_dict[_round] = contrib_dict
 
     return round_dict
 
