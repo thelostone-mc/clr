@@ -243,22 +243,22 @@ if __name__ == '__main__':
 
 
 
-##########################
+####################################################
 
-# CHECK
-# zero contributions to a grant in r6 = 0 match
-# first contribution to a grant in r6 pairwise match 
-#     include all permutations in r6 and between r6 and r5
-#     exclude diagonals (r6a, r6a) and (r6a, r5a)
-#     exclude permutations in r5 1/3 contributors
+# # TESTING
 
-# # # TESTING
+# # zero contributions to a grant in r6 = 0 match
+# # first contribution to a grant in r6 pairwise match 
+# #     include all permutations in r6 and between r6 and r5
+# #     exclude diagonals (r6a, r6a) and (r6a, r5a)
+# #     exclude permutations in r5 1/3 contributors
 
-# # # can't combine at this level because it would aggregate prev & curr rounds
+
+# # can't combine at this level because it would aggregate prev & curr rounds
 # # combined = curr_round_res + prev_round_res
 
-# # # separate aggregate contributions otherwise it'll all be counted as one
-# # # you can't have dual keys in dicts, nest again or list of lists
+# # separate aggregate contributions otherwise it'll all be counted as one
+# # you can't have dual keys in dicts, nest again or list of lists
 
 # # curr_round_res = [x for x in curr_round if x[0] in [490.0, 86.0, 526.0]]
 # # curr_round_set = list(set([x[0] for x in curr_round_res]))
@@ -302,3 +302,28 @@ if __name__ == '__main__':
 
 # # calculate clr with current & previous pairs
 # res = calculate_clr(combinedagg, ptots_curr, threshold=25.0, total_pot=100000.0)
+
+####################################################
+
+# ADDITIONAL TESTS
+
+prev = [
+    [100.0, 1.0, 9.0],
+    [100.0, 2.0, 16.0],
+    [100.0, 3.0, 25.0],
+    [100.0, 4.0, 36.0],
+    [200.0, 5.0, 9.0],
+    [200.0, 6.0, 9.0]
+]
+curr = [
+    [100.0, 4.0, 36.0],
+    [100.0, 10.0, 49.0],
+    [200.0, 9.0, 9.0],
+    [200.0, 8.0, 16.0]
+]
+
+agg_curr = aggregate_contributions(curr, 'current')
+agg_prev = aggregate_contributions(prev, 'previous')
+combinedagg = {**agg_prev, **agg_curr}
+ptots = get_totals_by_pair(combinedagg)
+res = calculate_clr(combinedagg, ptots, threshold=25.0, total_pot=1000.0)
