@@ -208,7 +208,6 @@ def calculate_clr(aggregated_contributions, pair_totals, verified_list, v_thresh
 
             # pairwise matches to current round
             for k2, v2 in contribz.items():
-                # if k2 > k1 and (k2 and k1 in verified_list):
                 if k2 > k1 and all(i in verified_list for i in [k2, k1]):
                     print(f'k1:{k1}')  # testing
                     print(f'k2:{k2}')  # testing
@@ -219,7 +218,6 @@ def calculate_clr(aggregated_contributions, pair_totals, verified_list, v_thresh
             # pairwise matches to last round
             if aggregated_contributions['previous'].get(proj):
                 for x1, y1 in aggregated_contributions['previous'][proj].items():
-                    # if x1 != k1 and (x1 and k1) in verified_list:
                     if x1 != k1 and all(i in verified_list for i in [x1, k1]):
                         print(f'x1:{x1}')  # testing
                         print(f'k1:{k1}')  # testing
