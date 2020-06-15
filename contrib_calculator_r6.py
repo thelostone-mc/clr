@@ -208,7 +208,10 @@ def calculate_clr(aggregated_contributions, pair_totals, verified_list, v_thresh
 
             # pairwise matches to current round
             for k2, v2 in contribz.items():
-                if k2 > k1 and (k2 and k1) in verified_list:
+                # if k2 > k1 and (k2 and k1 in verified_list):
+                if k2 > k1 and all(i in verified_list for i in [k2, k1]):
+                    print(f'k1:{k1}')  # testing
+                    print(f'k2:{k2}')  # testing
                     tot += ((v1 * v2) ** 0.5) / (pair_totals[k1][k2] / v_threshold + 1)
                 else:
                     tot += ((v1 * v2) ** 0.5) / (pair_totals[k1][k2] / uv_threshold + 1)
@@ -216,7 +219,10 @@ def calculate_clr(aggregated_contributions, pair_totals, verified_list, v_thresh
             # pairwise matches to last round
             if aggregated_contributions['previous'].get(proj):
                 for x1, y1 in aggregated_contributions['previous'][proj].items():
-                    if x1 > k1 and (x1 and k1) in verified_list:
+                    # if x1 != k1 and (x1 and k1) in verified_list:
+                    if x1 != k1 and all(i in verified_list for i in [x1, k1]):
+                        print(f'x1:{x1}')  # testing
+                        print(f'k1:{k1}')  # testing
                         tot += ((v1 * y1) ** 0.5) / (pair_totals[k1][x1] / v_threshold + 1)
                     else:
                         tot += ((v1 * y1) ** 0.5) / (pair_totals[k1][x1] / uv_threshold + 1)
@@ -227,12 +233,12 @@ def calculate_clr(aggregated_contributions, pair_totals, verified_list, v_thresh
     if bigtot >= total_pot:
         saturation_point = True
 
-    # find normalization factor
-    normalization_factor = bigtot / total_pot
-
-    # modify totals
-    for result in totals:
-        result['clr_amount'] = result['clr_amount'] / normalization_factor
+    if saturation_point == True:
+        # find normalization factor
+        normalization_factor = bigtot / total_pot
+        # modify totals
+        for result in totals:
+            result['clr_amount'] = result['clr_amount'] / normalization_factor
 
     return totals, saturation_point
 
@@ -335,38 +341,6 @@ if __name__ == '__main__':
 
 ####################################################
 
-# mix of verified & unverified
-
-prev = [
-    [100.0, 1.0, 'unverified', 9.0],
-    [100.0, 2.0, 'verified', 16.0],
-    [100.0, 3.0, 'unverified', 25.0],
-    [100.0, 4.0, 'verified', 36.0],
-    [200.0, 5.0, 'unverified', 9.0],
-    [200.0, 6.0, 'unverified', 9.0]
-]
-curr = [
-    [100.0, 4.0, 'verified', 36.0],
-    [100.0, 10.0, 'verified', 49.0],
-    [200.0, 9.0, 'unverified', 9.0],
-    [200.0, 8.0, 'unverified', 16.0]
-]
-
-vlist = get_verified_list(curr + prev)
-agg_curr = aggregate_contributions(curr, 'current')
-agg_prev = aggregate_contributions(prev, 'previous')
-combinedagg = {**agg_prev, **agg_curr}
-ptots = get_totals_by_pair(combinedagg)
-res = calculate_clr(combinedagg, ptots, vlist, v_threshold=25.0, uv_threshold=5.0, total_pot=1000.0)
-
-'''
-([{'id': 100.0, 'clr_amount': 674.3818584344467},
-  {'id': 200.0, 'clr_amount': 325.61814156555334}],
- False)
-'''
-
-####################################################
-
 # all unverified
 
 prev = [
@@ -389,11 +363,11 @@ agg_curr = aggregate_contributions(curr, 'current')
 agg_prev = aggregate_contributions(prev, 'previous')
 combinedagg = {**agg_prev, **agg_curr}
 ptots = get_totals_by_pair(combinedagg)
-res = calculate_clr(combinedagg, ptots, vlist, v_threshold=25.0, uv_threshold=5.0, total_pot=1000.0)
+res = calculate_clr(combinedagg, ptots, vlist, v_threshold=25.0, uv_threshold=5.0, total_pot=10000.0)
 
 '''
-([{'id': 100.0, 'clr_amount': 618.7146888291546},
-  {'id': 200.0, 'clr_amount': 381.2853111708453}],
+([{'id': 100.0, 'clr_amount': 40.546726309791495},
+  {'id': 200.0, 'clr_amount': 24.98707633278265}],
  False)
 '''
 
@@ -421,10 +395,72 @@ agg_curr = aggregate_contributions(curr, 'current')
 agg_prev = aggregate_contributions(prev, 'previous')
 combinedagg = {**agg_prev, **agg_curr}
 ptots = get_totals_by_pair(combinedagg)
-res = calculate_clr(combinedagg, ptots, vlist, v_threshold=25.0, uv_threshold=5.0, total_pot=1000.0)
+res = calculate_clr(combinedagg, ptots, vlist, v_threshold=25.0, uv_threshold=5.0, total_pot=10000.0)
 
 '''
-([{'id': 100.0, 'clr_amount': 636.4091638195313},
-  {'id': 200.0, 'clr_amount': 363.59083618046867}],
+k1:4.0
+k2:10.0
+x1:1.0
+k1:4.0
+x1:2.0
+k1:4.0
+x1:3.0
+k1:4.0
+x1:1.0
+k1:10.0
+x1:2.0
+k1:10.0
+x1:3.0
+k1:10.0
+x1:4.0
+k1:10.0
+x1:5.0
+k1:9.0
+x1:6.0
+k1:9.0
+k1:8.0
+k2:9.0
+x1:5.0
+k1:8.0
+x1:6.0
+k1:8.0
+
+([{'id': 100.0, 'clr_amount': 90.03969680182165},
+  {'id': 200.0, 'clr_amount': 38.11498731327261}],
+ False)
+'''
+
+####################################################
+
+# mix of verified & unverified
+
+prev = [
+    [100.0, 1.0, 'unverified', 9.0],
+    [100.0, 2.0, 'verified', 16.0],
+    [100.0, 3.0, 'unverified', 25.0],
+    [100.0, 4.0, 'verified', 36.0],
+    [200.0, 5.0, 'unverified', 9.0],
+    [200.0, 6.0, 'verified', 9.0]
+]
+curr = [
+    [100.0, 4.0, 'verified', 36.0],
+    [100.0, 10.0, 'unverified', 49.0],
+    [200.0, 9.0, 'unverified', 9.0],
+    [200.0, 8.0, 'unverified', 16.0]
+]
+
+vlist = get_verified_list(curr + prev)
+agg_curr = aggregate_contributions(curr, 'current')
+agg_prev = aggregate_contributions(prev, 'previous')
+combinedagg = {**agg_prev, **agg_curr}
+ptots = get_totals_by_pair(combinedagg)
+res = calculate_clr(combinedagg, ptots, vlist, v_threshold=25.0, uv_threshold=5.0, total_pot=10000.0)
+
+'''
+x1:2.0
+k1:4.0
+
+([{'id': 100.0, 'clr_amount': 45.78767200623433},
+  {'id': 200.0, 'clr_amount': 24.98707633278265}],
  False)
 '''
