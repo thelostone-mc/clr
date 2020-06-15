@@ -55,7 +55,7 @@ def get_data(csv_file):
 
     returns: 
         list of lists of grant data 
-            [[grant_id (str), user_id (str), contribution_amount (float)]]
+            [[grant_id (str), user_id (str), verification_status (str), contribution_amount (float)]]
 '''
 def translate_data(grants_data):
     grants_list = []
@@ -64,6 +64,7 @@ def translate_data(grants_data):
         for c in g.get('contributions'):
             val = [grant_id] + [list(c.keys())[0], list(c.values())[0]]
             grants_list.append(val)
+    ### NEED TO CHANGE TRANSLATE DATA TO OUTPUT VERIFICATION STATUS
 
     return grants_list
 
@@ -74,7 +75,7 @@ def translate_data(grants_data):
 
     args:
         list of lists of grant data 
-        [[grant_id (str), user_id (str), contribution_amount (float)]]
+        [[grant_id (str), user_id (str), verification_status (str), contribution_amount (float)]]
 
     returns:
         set list of verified user_ids
@@ -95,8 +96,8 @@ def get_verified_list(grant_contributions):
     aggregates contributions by contributor, and calculates total contributions by unique pairs
 
     args: 
-        list of lists of grant data
-            [[grant_id (str), user_id (str), contribution_amount (float)]]
+        list of lists of grant data 
+            [[grant_id (str), user_id (str), verification_status (str), contribution_amount (float)]]
         round
             str ('current' or 'previous') only
 
@@ -182,7 +183,9 @@ def get_totals_by_pair(contrib_dict):
             }
         pair_totals
             {user_id (str): {user_id (str): pair_total (float)}}
-        threshold
+        v_threshold (verified threshold)
+            float
+        uv_threshold (unverified threshold)
             float
         total_pot
             float
@@ -257,7 +260,7 @@ def run_calcs(csv_file, v_threshold=25.0, uv_threshold=5.0, total_pot=100000.0):
     agg5 = aggregate_contributions(prev_round, 'previous')
     combinedagg = {**agg5, **agg6}
     ptots= get_totals_by_pair(combinedagg)
-    totals = calculate_clr(combinedagg, ptots, vlist, v_threshold=threshold, uv_threshold=uv_threshold, total_pot=total_pot)
+    totals = calculate_clr(combinedagg, ptots, vlist, v_threshold=v_threshold, uv_threshold=uv_threshold, total_pot=total_pot)
     print('live calc runtime --- %s seconds ---' % (time.time() - start_time))
  
     return totals
