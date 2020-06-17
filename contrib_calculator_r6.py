@@ -13,21 +13,27 @@ from pprint import pprint
     args: 
         csv file
             'filename.csv'
+        verification
+            string ('verified' or 'unverified')
 
     returns: 
         list of lists of grant data x 2
             [[grant_id (str), user_id (str), contribution_amount (float)]]
 '''
-def get_data(csv_file):
+def get_data(csv_file, verification):
     # read data
     df = pd.read_csv(csv_file)
     
     # round information
     pr = df[df['clr_round'] == 4]
     cr = df[df['clr_round'] == 5]
+
+    # add verified
+    pr['ver_stat'] = verification
+    cr['ver_stat'] = verification
     
     # get relevant rows
-    relevant = ['grant_id', 'contributor_profile_id', 'amount_per_period_usdt']
+    relevant = ['grant_id', 'contributor_profile_id', 'ver_stat', 'amount_per_period_usdt']
     pr = pr[relevant]
     cr = cr[relevant]
 
@@ -209,8 +215,8 @@ def calculate_clr(aggregated_contributions, pair_totals, verified_list, v_thresh
             # pairwise matches to current round
             for k2, v2 in contribz.items():
                 if k2 > k1 and all(i in verified_list for i in [k2, k1]):
-                    print(f'k1:{k1}')  # testing
-                    print(f'k2:{k2}')  # testing
+                    # print(f'k1:{k1}')  # testing
+                    # print(f'k2:{k2}')  # testing
                     tot += ((v1 * v2) ** 0.5) / (pair_totals[k1][k2] / v_threshold + 1)
                 else:
                     tot += ((v1 * v2) ** 0.5) / (pair_totals[k1][k2] / uv_threshold + 1)
@@ -219,8 +225,8 @@ def calculate_clr(aggregated_contributions, pair_totals, verified_list, v_thresh
             if aggregated_contributions['previous'].get(proj):
                 for x1, y1 in aggregated_contributions['previous'][proj].items():
                     if x1 != k1 and all(i in verified_list for i in [x1, k1]):
-                        print(f'x1:{x1}')  # testing
-                        print(f'k1:{k1}')  # testing
+                        # print(f'x1:{x1}')  # testing
+                        # print(f'k1:{k1}')  # testing
                         tot += ((v1 * y1) ** 0.5) / (pair_totals[k1][x1] / v_threshold + 1)
                     else:
                         tot += ((v1 * y1) ** 0.5) / (pair_totals[k1][x1] / uv_threshold + 1)
@@ -228,15 +234,15 @@ def calculate_clr(aggregated_contributions, pair_totals, verified_list, v_thresh
         bigtot += tot
         totals.append({'id': proj, 'clr_amount': tot})
 
-    if bigtot >= total_pot:
-        saturation_point = True
+    # if bigtot >= total_pot:
+    #     saturation_point = True
 
-    if saturation_point == True:
-        # find normalization factor
-        normalization_factor = bigtot / total_pot
-        # modify totals
-        for result in totals:
-            result['clr_amount'] = result['clr_amount'] / normalization_factor
+    # if saturation_point == True:
+    #     # find normalization factor
+    #     normalization_factor = bigtot / total_pot
+    #     # modify totals
+    #     for result in totals:
+    #         result['clr_amount'] = result['clr_amount'] / normalization_factor
 
     return totals, saturation_point
 
@@ -256,10 +262,10 @@ def calculate_clr(aggregated_contributions, pair_totals, verified_list, v_thresh
     returns: 
         grants clr award amounts
 '''
-def run_calcs(csv_file, v_threshold=25.0, uv_threshold=5.0, total_pot=100000.0):
+def run_calcs(csv_file, verification, v_threshold=25.0, uv_threshold=5.0, total_pot=100000.0):
     start_time = time.time()
-    prev_round, curr_round = get_data(csv_file)
-    # vlist = get_verified_list = prev_round + curr_round
+    prev_round, curr_round = get_data(csv_file, verification)
+    vlist = get_verified_list(prev_round + curr_round)
     agg6 = aggregate_contributions(curr_round, 'current')
     agg5 = aggregate_contributions(prev_round, 'previous')
     combinedagg = {**agg5, **agg6}
@@ -272,10 +278,6 @@ def run_calcs(csv_file, v_threshold=25.0, uv_threshold=5.0, total_pot=100000.0):
 
 
 if __name__ == '__main__':
-    t = run_calcs('r4_r5_tech_contribs_5004_5678.csv')
-    pprint(t)
-
-
 
 ####################################################
 
@@ -361,7 +363,7 @@ agg_curr = aggregate_contributions(curr, 'current')
 agg_prev = aggregate_contributions(prev, 'previous')
 combinedagg = {**agg_prev, **agg_curr}
 ptots = get_totals_by_pair(combinedagg)
-res = calculate_clr(combinedagg, ptots, vlist, v_threshold=25.0, uv_threshold=5.0, total_pot=10000.0)
+res = calculate_clr(combinedagg, ptots, vlist, v_threshold=25.0, uv_threshold=10.0, total_pot=10000.0)
 
 '''
 ([{'id': 100.0, 'clr_amount': 40.546726309791495},
@@ -462,3 +464,16 @@ k1:4.0
   {'id': 200.0, 'clr_amount': 24.98707633278265}],
  False)
 '''
+
+####################################################
+
+# verified vs unverified, test thresholds for avg 20% difference
+
+v = run_calcs('r4_r5_tech_contribs_5004_5678.csv', 'verified', v_threshold=25.0, uv_threshold=9.0, total_pot=50000.0)
+uv = run_calcs('r4_r5_tech_contribs_5004_5678.csv', 'unverified', v_threshold=25.0, uv_threshold=9.0, total_pot=50000.0)
+
+dfv = pd.DataFrame(v[0])
+dfu = pd.DataFrame(uv[0])
+df = dfv.merge(dfu, on='id', how='left')
+df['perc_diff'] = (df['clr_amount_x'] - df['clr_amount_y']) / df['clr_amount_x']
+df['perc_diff'].mean()
