@@ -234,17 +234,18 @@ def calculate_clr(aggregated_contributions, pair_totals, verified_list, v_thresh
         bigtot += tot
         totals.append({'id': proj, 'clr_amount': tot})
 
-    # if bigtot >= total_pot:
-    #     saturation_point = True
+    if bigtot >= total_pot:
+        saturation_point = True
 
-    # if saturation_point == True:
-    #     # find normalization factor
-    #     normalization_factor = bigtot / total_pot
-    #     # modify totals
-    #     for result in totals:
-    #         result['clr_amount'] = result['clr_amount'] / normalization_factor
+    if saturation_point == True:
+        for t in totals:
+            t['clr_amount'] = ((t['clr_amount'] / bigtot) * total_pot)
 
-    return totals, saturation_point
+    bigtot_check = 0
+    for t in totals:
+        bigtot_check += t['clr_amount']
+
+    return totals, saturation_point, bigtot_check
 
 
 
@@ -477,3 +478,15 @@ dfu = pd.DataFrame(uv[0])
 df = dfv.merge(dfu, on='id', how='left')
 df['perc_diff'] = (df['clr_amount_x'] - df['clr_amount_y']) / df['clr_amount_x']
 df['perc_diff'].mean()
+
+####################################################
+
+# testing new normalization 
+
+prev_round, curr_round = get_data('r4_r5_tech_contribs_5004_5678.csv', 'verified')
+vlist = get_verified_list(prev_round + curr_round)
+agg6 = aggregate_contributions(curr_round, 'current')
+agg5 = aggregate_contributions(prev_round, 'previous')
+combinedagg = {**agg5, **agg6}
+ptots= get_totals_by_pair(combinedagg)
+totals = calculate_clr(combinedagg, ptots, vlist, v_threshold=25.0, uv_threshold=9.0, total_pot=50000.0)
