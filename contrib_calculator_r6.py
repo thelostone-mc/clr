@@ -234,18 +234,25 @@ def calculate_clr(aggregated_contributions, pair_totals, verified_list, v_thresh
         bigtot += tot
         totals.append({'id': proj, 'clr_amount': tot})
 
-    if bigtot >= total_pot:
-        saturation_point = True
+    # bigtot_normalized_cap = 0
+    # for t in totals:    
+    #     clr_amount = t['clr_amount']
 
-    if saturation_point == True:
-        for t in totals:
-            t['clr_amount'] = ((t['clr_amount'] / bigtot) * total_pot)
+    #     # 1. normalize
+    #     if bigtot >= total_pot:
+    #         t['clr_amount'] = ((clr_amount / bigtot) * total_pot) 
 
-    bigtot_check = 0
-    for t in totals:
-        bigtot_check += t['clr_amount']
+    #     # 2. cap clr amount
+    #     if clr_amount >= _cap:
+    #         t['clr_amount'] = _cap
 
-    return totals, saturation_point, bigtot_check
+    #     # 3. calculate the total clr to be distributed
+    #     bigtot_normalized_cap += t['clr_amount']
+
+    # if bigtot_normalized_cap >= total_pot:
+    #     saturation_point = True
+
+    return totals, bigtot_normalized_cap, saturation_point
 
 
 
